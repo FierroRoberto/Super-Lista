@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F6E56">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lista del Súper">
+<link rel="manifest" href="manifest.json">
+<title>Lista del Súper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#F4F2EE; --surface:#FFFFFF; --surface2:#F9F8F5;
+  --border:#E4E0D8; --border2:#CCC8BF;
+  --text:#1C1B18; --text2:#706D64; --text3:#A09D96;
+  --teal:#0C5C47; --teal-mid:#138A68; --teal-light:#D8F0E8; --teal-xlight:#EEF9F4;
+  --amber:#7A4508; --amber-mid:#B86B12; --amber-light:#FDECD3; --amber-xlight:#FEF6EA;
+  --coral:#8C3219; --coral-mid:#C94E2A; --coral-light:#FAE4DB; --coral-xlight:#FDF2EE;
+  --purple:#4840A8; --purple-mid:#7068CC; --purple-light:#E8E6FC; --purple-xlight:#F3F2FE;
+  --rad:14px; --rad-sm:9px; --rad-xs:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06);
+}
+html { font-size:16px; }
+body {
+  font-family:'Nunito',system-ui,sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100dvh; max-width:430px;
+  margin:0 auto; -webkit-font-smoothing:antialiased;
+}
+
+/* ── Header ── */
+.app-header {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:14px 16px 12px; position:sticky; top:0; z-index:100;
+  box-shadow:var(--shadow);
+}
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.header-brand { display:flex; align-items:center; gap:8px; }
+.brand-icon {
+  width:34px; height:34px; border-radius:9px;
+  background:linear-gradient(135deg,var(--teal-mid),var(--teal));
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; flex-shrink:0;
+  box-shadow:0 2px 6px rgba(19,138,104,.35);
+}
+.brand-text h1 { font-size:16px; font-weight:800; letter-spacing:-.4px; }
+.brand-text p  { font-size:11.5px; color:var(--text2); margin-top:1px; font-weight:500; }
+.header-actions { display:flex; gap:6px; }
+.icon-btn {
+  width:34px; height:34px; border-radius:9px;
+  border:1.5px solid var(--border); background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:15px; transition:background .15s;
+}
+.icon-btn:active { background:var(--bg); }
+.icon-btn.active-mode { background:var(--teal-xlight); border-color:var(--teal-mid); }
+
+.sync-bar {
+  display:flex; align-items:center; gap:7px;
+  padding:7px 10px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:var(--rad-xs); font-size:11.5px;
+}
+.sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--border2); transition:background .3s; }
+.sync-dot.ok      { background:#22C78B; }
+.sync-dot.syncing { background:var(--amber-mid); animation:blink 1s ease-in-out infinite; }
+.sync-dot.error   { background:var(--coral-mid); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+.sync-label { flex:1; color:var(--text2); font-weight:500; }
+.sync-action { font-size:11px; font-weight:700; color:var(--teal-mid); background:none; border:none; cursor:pointer; }
+
+/* ── Tabs ── */
+.tabs-wrap {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:10px 14px; display:flex; gap:7px; overflow-x:auto; scrollbar-width:none;
+}
+.tabs-wrap::-webkit-scrollbar { display:none; }
+.tab {
+  flex-shrink:0; padding:6px 13px; border-radius:20px;
+  font-size:12px; font-weight:700; border:1.5px solid transparent;
+  cursor:pointer; transition:all .18s; background:transparent; white-space:nowrap;
+}
+.tab-all { color:var(--text2); border-color:var(--border); }
+.tab-all.active { background:var(--text); color:#fff; border-color:var(--text); }
+.tab-0 { color:var(--teal); border-color:var(--teal-light); }
+.tab-0.active { background:var(--teal); color:#fff; border-color:var(--teal); }
+.tab-1 { color:var(--amber); border-color:var(--amber-light); }
+.tab-1.active { background:var(--amber-mid); color:#fff; border-color:var(--amber-mid); }
+.tab-2 { color:var(--coral); border-color:var(--coral-light); }
+.tab-2.active { background:var(--coral-mid); color:#fff; border-color:var(--coral-mid); }
+.tab-3 { color:var(--purple); border-color:var(--purple-light); }
+.tab-3.active { background:var(--purple-mid); color:#fff; border-color:var(--purple-mid); }
+
+/* ── Edit mode banner ── */
+.edit-banner {
+  background:var(--teal-xlight); border-bottom:1px solid var(--teal-light);
+  padding:8px 16px; display:flex; align-items:center; gap:8px;
+  font-size:12px; font-weight:700; color:var(--teal);
+}
+.edit-banner span { flex:1; }
+
+/* ── Content ── */
+.content { padding:14px 13px 40px; }
+
+/* Total banner */
+.total-banner {
+  background:var(--text); color:#fff; border-radius:var(--rad);
+  padding:14px 16px; display:flex; align-items:center;
+  justify-content:space-between; margin-bottom:14px; box-shadow:var(--shadow-md);
+}
+.total-lbl { font-size:11px; font-weight:600; opacity:.55; text-transform:uppercase; letter-spacing:.6px; }
+.total-amt { font-size:26px; font-weight:800; letter-spacing:-1px; margin-top:2px; }
+.total-prog-lbl { font-size:11px; opacity:.55; font-weight:600; text-align:right; }
+.total-prog-val { font-size:18px; font-weight:800; margin-top:2px; text-align:right; }
+
+/* Store cards */
+.store-card {
+  background:var(--surface); border-radius:var(--rad);
+  border:1px solid var(--border); margin-bottom:13px;
+  overflow:hidden; box-shadow:var(--shadow);
+  animation:fadeUp .25s ease both;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.store-head {
+  padding:12px 14px 10px; display:flex;
+  align-items:flex-start; justify-content:space-between; border-bottom:1px solid var(--border);
+}
+.sh-0{background:var(--teal-xlight)} .sh-1{background:var(--amber-xlight)}
+.sh-2{background:var(--coral-xlight)} .sh-3{background:var(--purple-xlight)}
+.store-title { font-size:14px; font-weight:800; letter-spacing:-.3px; }
+.store-subtitle { font-size:11.5px; margin-top:3px; font-weight:500; }
+.st-0{color:var(--teal-mid)} .st-1{color:var(--amber-mid)}
+.st-2{color:var(--coral-mid)} .st-3{color:var(--purple-mid)}
+
+.reset-btn {
+  font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:20px;
+  border:1.5px solid; cursor:pointer; background:var(--surface);
+  transition:all .15s; white-space:nowrap;
+}
+.rb-0{color:var(--teal);border-color:var(--teal-mid)} .rb-0:active{background:var(--teal);color:#fff}
+.rb-1{color:var(--amber);border-color:var(--amber-mid)} .rb-1:active{background:var(--amber-mid);color:#fff}
+.rb-2{color:var(--coral);border-color:var(--coral-mid)} .rb-2:active{background:var(--coral-mid);color:#fff}
+.rb-3{color:var(--purple);border-color:var(--purple-mid)} .rb-3:active{background:var(--purple-mid);color:#fff}
+
+/* Progress */
+.prog-wrap { padding:8px 14px 10px; display:flex; align-items:center; gap:8px; }
+.prog-bar { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:2px; transition:width .4s cubic-bezier(.4,0,.2,1); }
+.pf-0{background:var(--teal-mid)} .pf-1{background:var(--amber-mid)}
+.pf-2{background:var(--coral-mid)} .pf-3{background:var(--purple-mid)}
+.prog-pct { font-size:11px; font-weight:700; color:var(--text3); min-width:28px; text-align:right; }
+
+/* ── Item rows — normal mode ── */
+.item-row {
+  display:flex; align-items:center; gap:11px;
+  padding:10px 14px; border-bottom:1px solid var(--border);
+  cursor:pointer; transition:background .1s; user-select:none;
+}
+.item-row:last-child { border-bottom:none; }
+.item-row:active { background:var(--bg); }
+.item-row.done { opacity:.42; }
+.checkbox {
+  width:21px; height:21px; border-radius:6px;
+  border:1.5px solid var(--border2); background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition:all .15s;
+}
+.checkbox.on-0{background:var(--teal-mid);border-color:var(--teal-mid)}
+.checkbox.on-1{background:var(--amber-mid);border-color:var(--amber-mid)}
+.checkbox.on-2{background:var(--coral-mid);border-color:var(--coral-mid)}
+.checkbox.on-3{background:var(--purple-mid);border-color:var(--purple-mid)}
+.checkbox svg { display:none; }
+.checkbox.on-0 svg,.checkbox.on-1 svg,.checkbox.on-2 svg,.checkbox.on-3 svg { display:block; }
+.item-text { flex:1; min-width:0; }
+.item-name { font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.item-row.done .item-name { text-decoration:line-through; }
+.item-qty  { font-size:11.5px; color:var(--text2); margin-top:1px; font-weight:500; }
+.item-price-tag { font-size:12.5px; font-weight:700; color:var(--text3); flex-shrink:0; }
+.item-price-tag.checked { color:var(--teal-mid); }
+
+/* ── Item rows — edit mode ── */
+.item-row-edit {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 14px; border-bottom:1px solid var(--border); background:var(--surface);
+}
+.item-row-edit:last-child { border-bottom:none; }
+.edit-name { font-size:13px; font-weight:600; flex:1; color:var(--text); }
+.edit-lbl { font-size:10.5px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; text-align:center; }
+
+/* Stepper for quantity */
+.stepper { display:flex; align-items:center; gap:0; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; flex-shrink:0; }
+.stepper-btn {
+  width:28px; height:28px; border:none; background:var(--surface2);
+  font-size:16px; font-weight:700; cursor:pointer; color:var(--text2);
+  display:flex; align-items:center; justify-content:center;
+  transition:background .12s; flex-shrink:0; line-height:1;
+}
+.stepper-btn:active { background:var(--border); }
+.stepper-val {
+  min-width:28px; text-align:center; font-size:13px; font-weight:800;
+  color:var(--text); padding:0 4px; border-left:1px solid var(--border); border-right:1px solid var(--border);
+  height:28px; line-height:28px;
+}
+
+/* Price inline input */
+.price-field {
+  display:flex; align-items:center; gap:3px; border:1.5px solid var(--border);
+  border-radius:8px; overflow:hidden; flex-shrink:0; background:var(--surface2);
+  height:28px; padding:0 7px;
+}
+.price-field span { font-size:12px; font-weight:700; color:var(--text3); }
+.price-input {
+  width:44px; border:none; background:transparent; font-size:13px;
+  font-weight:800; color:var(--text); font-family:inherit;
+  outline:none; text-align:right;
+}
+.price-field:focus-within { border-color:var(--teal-mid); background:var(--surface); }
+
+/* ── Subtotal ── */
+.subtotal-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 14px; background:var(--surface2); border-top:1px solid var(--border);
+}
+.sub-lbl { font-size:12px; color:var(--text2); font-weight:600; }
+.sub-val { font-size:15px; font-weight:800; }
+.sv-0{color:var(--teal)} .sv-1{color:var(--amber)} .sv-2{color:var(--coral)} .sv-3{color:var(--purple)}
+
+/* ── Drive panel ── */
+.drive-panel {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--rad); padding:16px; margin-bottom:14px; box-shadow:var(--shadow);
+}
+.drive-header { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.drive-logo { width:28px; height:28px; flex-shrink:0; }
+.drive-title-txt { font-size:14px; font-weight:800; }
+.drive-subtitle  { font-size:11.5px; color:var(--text2); font-weight:500; }
+.field-group { margin-bottom:10px; }
+.field-label { font-size:11px; font-weight:700; color:var(--text2); margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
+.field-input {
+  width:100%; font-size:13px; font-family:inherit; font-weight:500;
+  padding:9px 11px; border:1.5px solid var(--border); border-radius:var(--rad-sm);
+  background:var(--bg); color:var(--text); outline:none; transition:border-color .15s;
+}
+.field-input:focus { border-color:var(--teal-mid); background:var(--surface); }
+.field-input::placeholder { color:var(--text3); }
+.save-btn {
+  width:100%; padding:10px; background:var(--teal-mid); color:#fff;
+  border:none; border-radius:var(--rad-sm); font-size:14px; font-weight:700;
+  font-family:inherit; cursor:pointer; transition:opacity .15s;
+}
+.save-btn:active { opacity:.85; }
+.drive-hint {
+  font-size:11.5px; color:var(--text2); line-height:1.55; margin-top:10px;
+  padding:9px 10px; background:var(--teal-xlight); border-radius:var(--rad-xs); font-weight:500;
+}
+.drive-hint a { color:var(--teal); font-weight:700; text-decoration:none; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header">
+  <div class="header-top">
+    <div class="header-brand">
+      <div class="brand-icon">🛒</div>
+      <div class="brand-text">
+        <h1>Lista del Súper</h1>
+        <p id="global-stats">Cargando…</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="edit-toggle-btn" onclick="toggleEditMode()" title="Modo edición">✏️</button>
+      <button class="icon-btn" onclick="toggleDrivePanel()" title="Configurar Drive">⚙️</button>
+    </div>
+  </div>
+  <div class="sync-bar">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span class="sync-label" id="sync-label">Sin conexión a Drive — modo local</span>
+    <button class="sync-action" onclick="triggerSync()">↻ Sync</button>
+  </div>
+</header>
+
+<!-- Edit mode banner -->
+<div id="edit-banner" class="edit-banner" style="display:none">
+  <span>✏️ Modo edición — toca piezas o precio para cambiar</span>
+  <button onclick="toggleEditMode()" style="font-size:11px;font-weight:800;color:var(--teal);background:none;border:none;cursor:pointer;">Listo ✓</button>
+</div>
+
+<!-- Tabs -->
+<nav class="tabs-wrap">
+  <button class="tab tab-all active" onclick="setTab(-1)">Todas</button>
+  <button class="tab tab-0" onclick="setTab(0)">🏪 Walmart</button>
+  <button class="tab tab-1" onclick="setTab(1)">🏪 SAM'S</button>
+  <button class="tab tab-2" onclick="setTab(2)">🏪 HEB</button>
+  <button class="tab tab-3" onclick="setTab(3)">🥦 Frutas</button>
+</nav>
+
+<main class="content" id="main-content"></main>
+
+<script>
+/* ═══════════════════════════════════════
+   DATA — fuente base del Excel
+═══════════════════════════════════════ */
+const BASE_STORES = [
+  {
+    id:'walmart', name:'Walmart', emoji:'🏪', c:'0', prices:true,
+    items:[
+      {n:'Pan Higos',q:1,p:50},{n:'Huevo',q:2,p:80},{n:'Chorizo',q:2,p:35},
+      {n:'Tocino San Rafael',q:1,p:100},{n:'Jamón',q:1,p:70},{n:'Queso',q:1,p:100},
+      {n:'Bolillos',q:1,p:20},{n:'Yogurt Bebible',q:1,p:110},{n:'Crema',q:1,p:40},
+      {n:'Mantequilla',q:1,p:80},{n:'Yogurt Griego Danone',q:1,p:55},{n:'Leche',q:1,p:80},
+      {n:'Jugo Naranja',q:1,p:50},{n:'Pan Artesano',q:1,p:60},{n:'Tortilla Harina',q:1,p:40},
+      {n:'Pan Empanizar',q:1,p:30},{n:'Crema Cacahuate',q:1,p:70},{n:'Tostadas',q:1,p:40},
+      {n:'Harina Hot Cakes',q:1,p:40},{n:'Media Crema',q:2,p:20},{n:'Clavel',q:1,p:20},
+      {n:'Lechera',q:1,p:25},{n:'Choco Don Gustavo',q:1,p:35},{n:'Galletas Saladas',q:1,p:25},
+      {n:'Cerillos',q:1,p:20},{n:'Granola',q:1,p:80},{n:'Papas Francesa',q:1,p:70},
+      {n:'Vinagre',q:1,p:20},{n:'Aceite Oliva-Aguacate',q:1,p:150},{n:'Frijol Isadora',q:3,p:16},
+      {n:'Azúcar',q:1,p:40},{n:'Arroz',q:1,p:30},{n:'Frijol',q:1,p:16},
+      {n:'Aderezo Ranch',q:1,p:30},{n:'Aderezo Mil Islas',q:1,p:30},{n:'Catsup',q:1,p:80},
+      {n:'Mostaza',q:1,p:40},{n:'Mayonesa',q:1,p:80},{n:'Sopa Fideo',q:1,p:15},
+      {n:'Spagueti',q:1,p:15},{n:'Atún',q:2,p:20},{n:'Lata Elote',q:1,p:20},
+      {n:'Lata Campesina',q:1,p:20},{n:'Chile San Marcos',q:1,p:35},{n:'Tilapia',q:2,p:40},
+      {n:'Bistec',q:3,p:125},{n:'Desechable',q:1,p:30},{n:'Servitoallas',q:2,p:30},
+      {n:'Papel Aluminio',q:1,p:40},{n:'Pañales',q:1,p:200},{n:'Croquetas',q:1,p:130},
+      {n:'Lavatrastes Axion',q:1,p:70},{n:'Poett',q:1,p:40},{n:'Cloro',q:1,p:30},
+      {n:'Detergente en polvo',q:1,p:35},{n:'Bold Detergente Ropa',q:1,p:140},
+      {n:'Sobres',q:3,p:80},{n:'Desodorante Rexona',q:1,p:70},{n:'Desodorante Obao',q:1,p:45},
+      {n:'Desodorante Axe Azul',q:1,p:50},{n:'Desodorante Mío',q:1,p:70},
+      {n:'Cepillos Dientes',q:1,p:50},{n:'Pasta Dientes',q:2,p:50},
+      {n:'Toalla Saba Buenas Noches',q:1,p:50},{n:'Saba Panti Multiestilos',q:1,p:30},
+      {n:'Papel Pétalo Rendimax',q:1,p:180},{n:'Aceite Almendra',q:1,p:45},{n:'Toallas Húmedas',q:1,p:45}
+    ]
+  },
+  {
+    id:'sams', name:"SAM'S Club", emoji:'🏪', c:'1', prices:true,
+    items:[
+      {n:'Uva',q:1,p:110},{n:'Pollo',q:1,p:125},{n:'Microdyn',q:1,p:100},
+      {n:'Guarnición',q:1,p:100},{n:'Leche Soya',q:1,p:180},{n:'Jabón Barra',q:1,p:150}
+    ]
+  },
+  {
+    id:'heb', name:'HEB', emoji:'🏪', c:'2', prices:true,
+    items:[
+      {n:'Molida Res',q:1,p:125},{n:'Café',q:1,p:150},
+      {n:'Galleta Arroz',q:1,p:35},{n:'Manteca Cerdo',q:1,p:50}
+    ]
+  },
+  {
+    id:'frutas', name:'Frutas y Verduras', emoji:'🥦', c:'3', prices:false,
+    items:[
+      {n:'Papaya',q:1},{n:'Plátano',q:4},{n:'Limón',q:10},{n:'Papa',q:6},
+      {n:'Cebolla',q:2},{n:'Tomatillo',q:6},{n:'Ajo',q:2},{n:'Pepino',q:1},
+      {n:'Cilantro',q:1},{n:'Sandía',q:1},{n:'Piña',q:1},{n:'Manzana',q:6},
+      {n:'Mandarina',q:6},{n:'Naranja',q:10},{n:'Mango',q:10},{n:'Tomate',q:6},
+      {n:'Lechuga',q:1},{n:'Papas Fritas',q:1},{n:'Aguacate',q:4}
+    ]
+  }
+];
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let state = {
+  checks:   { walmart:{}, sams:{}, heb:{}, frutas:{} },
+  overrides: {},          // { "walmart_3": {q:2, p:95} }
+  driveToken:'', driveFileId:'', lastSync:null
+};
+let STORES = [];          // computed: BASE_STORES + overrides applied
+let activeTab  = -1;
+let editMode   = false;
+let showDrive  = false;
+let syncStatus = 'offline';
+let syncTimer  = null;
+let driveWriteTimer = null;
+
+/* ═══════════════════════════════════════
+   PERSISTENCE
+═══════════════════════════════════════ */
+function load() {
+  try {
+    const s = localStorage.getItem('superLista_v4');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+  buildStores();
+}
+function save() {
+  try { localStorage.setItem('superLista_v4', JSON.stringify(state)); } catch(e) {}
+}
+
+/* ═══════════════════════════════════════
+   BUILD STORES (apply overrides)
+═══════════════════════════════════════ */
+function buildStores() {
+  STORES = BASE_STORES.map(store => ({
+    ...store,
+    items: store.items.map((item, i) => {
+      const key = store.id + '_' + i;
+      const ov  = state.overrides[key] || {};
+      return { n: item.n, q: ov.q ?? item.q, p: ov.p ?? item.p };
+    })
+  }));
+}
+
+/* ═══════════════════════════════════════
+   OVERRIDES
+═══════════════════════════════════════ */
+function setOverride(sid, i, field, value) {
+  const key = sid + '_' + i;
+  if (!state.overrides[key]) state.overrides[key] = {};
+  state.overrides[key][field] = value;
+  buildStores();
+  save();
+  scheduleDriveWrite();
+  renderStats();          // update header + subtotals without full re-render
+}
+function changeQty(sid, i, delta) {
+  const storeIdx = STORES.findIndex(s => s.id === sid);
+  const current  = STORES[storeIdx].items[i].q;
+  const next     = Math.max(1, current + delta);
+  if (next === current) return;
+  setOverride(sid, i, 'q', next);
+  // update stepper val inline
+  const el = document.getElementById('qval_' + sid + '_' + i);
+  if (el) el.textContent = next;
+  updateSubtotalInline(storeIdx);
+  updateTotalBanner();
+}
+function changePrice(sid, i, raw) {
+  const val = parseInt(raw, 10);
+  if (isNaN(val) || val < 0) return;
+  setOverride(sid, i, 'p', val);
+  updateSubtotalInline(STORES.findIndex(s => s.id === sid));
+  updateTotalBanner();
+}
+
+/* ═══════════════════════════════════════
+   CHECKS
+═══════════════════════════════════════ */
+function isChecked(sid, i) { return !!(state.checks[sid] && state.checks[sid][i]); }
+function toggle(sid, i) {
+  if (editMode) return;
+  if (!state.checks[sid]) state.checks[sid] = {};
+  state.checks[sid][i] = !state.checks[sid][i];
+  save(); render(); scheduleDriveWrite();
+}
+function resetStore(sid) {
+  state.checks[sid] = {};
+  save(); render(); scheduleDriveWrite();
+}
+
+/* ═══════════════════════════════════════
+   STATS
+═══════════════════════════════════════ */
+function storeStats(si) {
+  const s = STORES[si];
+  const total = s.items.length;
+  const done  = Object.values(state.checks[s.id] || {}).filter(Boolean).length;
+  return { total, done, pct: total ? Math.round(done / total * 100) : 0 };
+}
+function subtotal(si) {
+  const s = STORES[si];
+  if (!s.prices) return null;
+  return s.items.reduce((sum, item, i) => isChecked(s.id, i) ? sum + item.q * (item.p || 0) : sum, 0);
+}
+function grandTotal() {
+  return STORES.reduce((sum, _, i) => { const sub = subtotal(i); return sub != null ? sum + sub : sum; }, 0);
+}
+function globalDone()  { return STORES.reduce((s, _, i) => s + storeStats(i).done, 0); }
+function globalTotal() { return STORES.reduce((s, st) => s + st.items.length, 0); }
+
+/* ═══════════════════════════════════════
+   INLINE UPDATES (no full re-render)
+═══════════════════════════════════════ */
+function renderStats() {
+  const done = globalDone(), total = globalTotal(), gt = grandTotal();
+  const el = document.getElementById('global-stats');
+  if (el) el.textContent = `${done}/${total} artículos · $${gt.toLocaleString('es-MX')} marcados`;
+}
+function updateSubtotalInline(si) {
+  const sub = subtotal(si);
+  const el  = document.getElementById('subtotal_' + STORES[si].id);
+  if (el && sub !== null) el.textContent = '$' + sub.toLocaleString('es-MX');
+  const sub2 = document.getElementById('store-subtitle_' + STORES[si].id);
+  const st   = storeStats(si);
+  if (sub2) sub2.textContent = `${st.done} de ${st.total} artículos marcados${sub !== null ? ' · $' + sub.toLocaleString('es-MX') : ''}`;
+}
+function updateTotalBanner() {
+  const gt = grandTotal();
+  const el = document.getElementById('total-amt');
+  if (el) el.textContent = '$' + gt.toLocaleString('es-MX');
+  renderStats();
+}
+
+/* ═══════════════════════════════════════
+   TABS / EDIT MODE
+═══════════════════════════════════════ */
+function setTab(idx) {
+  activeTab = idx;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const map = [-1, 0, 1, 2, 3];
+    t.classList.toggle('active', map[i] === idx);
+  });
+  render();
+}
+function toggleEditMode() {
+  editMode = !editMode;
+  const btn = document.getElementById('edit-toggle-btn');
+  const ban = document.getElementById('edit-banner');
+  if (btn) btn.classList.toggle('active-mode', editMode);
+  if (ban) ban.style.display = editMode ? 'flex' : 'none';
+  render();
+}
+
+/* ═══════════════════════════════════════
+   RENDER
+═══════════════════════════════════════ */
+function checkSVG() {
+  return `<svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+    <path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function renderItemNormal(s, item, i) {
+  const ck = isChecked(s.id, i);
+  const rowTotal = s.prices ? item.q * (item.p || 0) : null;
+  return `<div class="item-row${ck ? ' done' : ''}" onclick="toggle('${s.id}',${i})">
+    <div class="checkbox${ck ? ' on-' + s.c : ''}">${ck ? checkSVG() : ''}</div>
+    <div class="item-text">
+      <div class="item-name">${item.n}</div>
+      <div class="item-qty">${item.q} ${item.q > 1 ? 'pzas' : 'pza'}${item.p ? ' · $' + item.p + ' c/u' : ''}</div>
+    </div>
+    ${rowTotal !== null ? `<div class="item-price-tag${ck ? ' checked' : ''}">$${rowTotal}</div>` : ''}
+  </div>`;
+}
+
+function renderItemEdit(s, item, i) {
+  const hasPrices = s.prices;
+  return `<div class="item-row-edit">
+    <div class="edit-name" style="font-size:12.5px">${item.n}</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
+      <div class="edit-lbl">Pzas</div>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="changeQty('${s.id}',${i},-1)">−</button>
+        <div class="stepper-val" id="qval_${s.id}_${i}">${item.q}</div>
+        <button class="stepper-btn" onclick="changeQty('${s.id}',${i},+1)">+</button>
+      </div>
+    </div>
+    ${hasPrices ? `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
+      <div class="edit-lbl">Precio</div>
+      <div class="price-field">
+        <span>$</span>
+        <input class="price-input" type="number" inputmode="numeric" min="0"
+          value="${item.p || 0}"
+          onchange="changePrice('${s.id}',${i},this.value)"
+          oninput="changePrice('${s.id}',${i},this.value)">
+      </div>
+    </div>` : ''}
+  </div>`;
+}
+
+function renderCard(si) {
+  const s  = STORES[si];
+  const st = storeStats(si);
+  const sub = subtotal(si);
+  const c  = s.c;
+  return `<div class="store-card">
+    <div class="store-head sh-${c}">
+      <div style="flex:1;min-width:0">
+        <div class="store-title">${s.emoji} ${s.name}</div>
+        <div class="store-subtitle st-${c}" id="store-subtitle_${s.id}">
+          ${st.done} de ${st.total} artículos marcados${sub !== null ? ' · $' + sub.toLocaleString('es-MX') : ''}
+        </div>
+      </div>
+      ${!editMode ? `<button class="reset-btn rb-${c}" onclick="resetStore('${s.id}')">↺ Reset</button>` : ''}
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill pf-${c}" style="width:${st.pct}%"></div></div>
+      <div class="prog-pct">${st.pct}%</div>
+    </div>
+    <div>
+      ${s.items.map((item, i) => editMode ? renderItemEdit(s, item, i) : renderItemNormal(s, item, i)).join('')}
+    </div>
+    ${sub !== null ? `
+    <div class="subtotal-row">
+      <span class="sub-lbl">Subtotal marcado</span>
+      <span class="sub-val sv-${c}" id="subtotal_${s.id}">$${sub.toLocaleString('es-MX')}</span>
+    </div>` : ''}
+  </div>`;
+}
+
+function renderDrivePanel() {
+  if (!showDrive) return '';
+  return `<div class="drive-panel">
+    <div class="drive-header">
+      <svg class="drive-logo" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0a7.9 7.9 0 003.3 3.3z" fill="#0066DA"/>
+        <path d="M43.65 25L29.9 1.2a7.9 7.9 0 00-3.3 3.3L.65 49.55a7.9 7.9 0 000 7.9h27.5z" fill="#00AC47"/>
+        <path d="M73.55 76.8a7.9 7.9 0 003.3-3.3l1.6-2.75 7.65-13.25a7.9 7.9 0 000-7.9H59.6l5.8 11.2z" fill="#EA4335"/>
+        <path d="M43.65 25L57.4 1.2a7.7 7.7 0 00-6.85-1.2H36.75a7.7 7.7 0 00-6.85 1.2z" fill="#00832D"/>
+        <path d="M59.6 53.45H27.7L13.95 77.1c1.35.8 2.9 1.2 4.6 1.2h49.8a7.9 7.9 0 004.6-1.2z" fill="#2684FC"/>
+        <path d="M73.4 26.45l-13.1-22.7a7.9 7.9 0 00-2.9-2.55L43.65 25l15.95 28.45H87.1a7.9 7.9 0 000-7.9z" fill="#FFBA00"/>
+      </svg>
+      <div>
+        <div class="drive-title-txt">Google Drive Sync</div>
+        <div class="drive-subtitle">Sincronización entre dispositivos</div>
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Access Token</div>
+      <input class="field-input" id="fi-token" type="password" placeholder="ya29.xxxxx..." value="${state.driveToken || ''}">
+    </div>
+    <div class="field-group">
+      <div class="field-label">File ID del archivo de estado</div>
+      <input class="field-input" id="fi-fileid" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="${state.driveFileId || ''}">
+    </div>
+    <button class="save-btn" onclick="saveDriveConfig()">Guardar y conectar</button>
+    <div class="drive-hint">
+      El estado (checks + cantidades + precios) se guarda en Drive cada vez que haces un cambio.<br>
+      Usa el mismo File ID en ambos dispositivos para sincronizar.<br>
+      Obtén tu token en <a href="https://developers.google.com/oauthplayground" target="_blank">OAuth Playground →</a>
+    </div>
+  </div>`;
+}
+
+function render() {
+  const done = globalDone(), total = globalTotal(), gt = grandTotal();
+  const el = document.getElementById('global-stats');
+  if (el) el.textContent = `${done}/${total} artículos · $${gt.toLocaleString('es-MX')} marcados`;
+
+  let html = renderDrivePanel();
+
+  if (activeTab === -1) {
+    html += `<div class="total-banner">
+      <div>
+        <div class="total-lbl">Total en carrito</div>
+        <div class="total-amt" id="total-amt">$${gt.toLocaleString('es-MX')}</div>
+      </div>
+      <div>
+        <div class="total-prog-lbl">Completado</div>
+        <div class="total-prog-val">${total ? Math.round(done/total*100) : 0}%</div>
+      </div>
+    </div>`;
+    html += STORES.map((_, i) => renderCard(i)).join('');
+  } else {
+    html += renderCard(activeTab);
+  }
+
+  document.getElementById('main-content').innerHTML = html;
+  updateSyncUI();
+}
+
+/* ═══════════════════════════════════════
+   DRIVE PANEL
+═══════════════════════════════════════ */
+function toggleDrivePanel() {
+  showDrive = !showDrive;
+  render();
+  if (showDrive) setTimeout(() => { const el = document.getElementById('fi-token'); if(el) el.focus(); }, 80);
+}
+function saveDriveConfig() {
+  state.driveToken  = document.getElementById('fi-token').value.trim();
+  state.driveFileId = document.getElementById('fi-fileid').value.trim();
+  save(); showDrive = false;
+  if (state.driveToken && state.driveFileId) { startPolling(); triggerSync(); }
+  render();
+}
+
+/* ═══════════════════════════════════════
+   DRIVE SYNC  (checks + overrides)
+═══════════════════════════════════════ */
+function scheduleDriveWrite() {
+  if (!state.driveToken || !state.driveFileId) return;
+  clearTimeout(driveWriteTimer);
+  driveWriteTimer = setTimeout(writeToDrive, 1500);
+}
+async function writeToDrive() {
+  if (!state.driveToken || !state.driveFileId) return;
+  syncStatus = 'syncing'; updateSyncUI();
+  const body = JSON.stringify({ checks: state.checks, overrides: state.overrides, version: Date.now() });
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/upload/drive/v3/files/${state.driveFileId}?uploadType=media`,
+      { method:'PATCH', headers:{'Authorization':'Bearer '+state.driveToken,'Content-Type':'application/json'}, body }
+    );
+    if (r.ok) { state.lastSync = Date.now(); syncStatus = 'ok'; save(); }
+    else syncStatus = 'error';
+  } catch(e) { syncStatus = 'error'; }
+  updateSyncUI();
+}
+async function readFromDrive() {
+  if (!state.driveToken || !state.driveFileId) return;
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${state.driveFileId}?alt=media`,
+      { headers:{'Authorization':'Bearer '+state.driveToken} }
+    );
+    if (r.ok) {
+      const data = await r.json();
+      if (data.version && (!state.lastSync || data.version > state.lastSync)) {
+        if (data.checks)    state.checks    = data.checks;
+        if (data.overrides) state.overrides = data.overrides;
+        state.lastSync = data.version;
+        buildStores(); save(); render();
+      }
+      syncStatus = 'ok';
+    } else syncStatus = 'error';
+  } catch(e) { syncStatus = 'error'; }
+  updateSyncUI();
+}
+function triggerSync() { readFromDrive(); }
+function startPolling() {
+  if (syncTimer) clearInterval(syncTimer);
+  if (!state.driveToken || !state.driveFileId) return;
+  syncTimer = setInterval(readFromDrive, 30000);
+}
+
+/* ═══════════════════════════════════════
+   SYNC UI
+═══════════════════════════════════════ */
+function updateSyncUI() {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if (!dot || !lbl) return;
+  dot.className = 'sync-dot';
+  if (syncStatus === 'ok') {
+    dot.classList.add('ok');
+    const t = state.lastSync ? new Date(state.lastSync).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '';
+    lbl.textContent = t ? 'Sincronizado a las ' + t : 'Sincronizado';
+  } else if (syncStatus === 'syncing') {
+    dot.classList.add('syncing'); lbl.textContent = 'Sincronizando…';
+  } else if (syncStatus === 'error') {
+    dot.classList.add('error'); lbl.textContent = 'Error de sincronización — modo local';
+  } else {
+    lbl.textContent = 'Sin Drive — modo local activo';
+  }
+}
+
+/* ═══════════════════════════════════════
+   BOOT
+═══════════════════════════════════════ */
+load();
+render();
+if (state.driveToken && state.driveFileId) {
+  startPolling();
+  setTimeout(triggerSync, 600);
+}
+</script>
+</body>
+</html>
