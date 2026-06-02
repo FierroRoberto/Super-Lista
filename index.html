@@ -259,6 +259,95 @@ body {
   padding:9px 10px; background:var(--teal-xlight); border-radius:var(--rad-xs); font-weight:500;
 }
 .drive-hint a { color:var(--teal); font-weight:700; text-decoration:none; }
+
+/* ── OAuth button ── */
+.oauth-btn {
+  width:100%; padding:11px 14px; border:none; border-radius:var(--rad-sm);
+  font-size:14px; font-weight:800; font-family:inherit; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  transition:opacity .15s; margin-bottom:8px;
+}
+.oauth-btn.google {
+  background:#fff; color:#3c4043; border:1.5px solid var(--border);
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+.oauth-btn.google:active { opacity:.8; }
+.oauth-btn.renew {
+  background:var(--amber-xlight); color:var(--amber);
+  border:1.5px solid var(--amber-light);
+}
+.oauth-btn.renew:active { opacity:.8; }
+
+/* Token status pill */
+.token-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11.5px; font-weight:700; padding:4px 9px;
+  border-radius:20px; margin-bottom:10px;
+}
+.token-pill.ok     { background:var(--teal-xlight);  color:var(--teal); }
+.token-pill.expiry { background:var(--amber-xlight); color:var(--amber); }
+.token-pill.none   { background:var(--bg); color:var(--text3); border:1px solid var(--border); }
+
+/* Divider */
+.or-divider {
+  display:flex; align-items:center; gap:8px; margin:10px 0;
+  font-size:11px; font-weight:700; color:var(--text3);
+}
+.or-divider::before,.or-divider::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+
+/* OAuth popup overlay */
+.oauth-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.55);
+  display:flex; align-items:flex-end; justify-content:center;
+  z-index:200; animation:fadeIn .2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.oauth-sheet {
+  background:var(--surface); border-radius:var(--rad) var(--rad) 0 0;
+  padding:20px 20px 32px; width:100%; max-width:430px;
+  animation:slideUp .25s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp { from{transform:translateY(60px)} to{transform:none} }
+.oauth-sheet h2 { font-size:16px; font-weight:800; margin-bottom:4px; }
+.oauth-sheet p  { font-size:12.5px; color:var(--text2); font-weight:500; line-height:1.5; margin-bottom:16px; }
+.oauth-steps { margin-bottom:18px; }
+.oauth-step {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:7px 0; border-bottom:1px solid var(--border); font-size:12.5px;
+}
+.oauth-step:last-child { border-bottom:none; }
+.step-num {
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  background:var(--teal-mid); color:#fff;
+  font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center;
+}
+.step-txt { flex:1; color:var(--text2); font-weight:500; padding-top:1px; line-height:1.4; }
+.step-txt b { color:var(--text); }
+.oauth-open-btn {
+  width:100%; padding:12px; background:var(--teal-mid); color:#fff;
+  border:none; border-radius:var(--rad-sm); font-size:14px; font-weight:800;
+  font-family:inherit; cursor:pointer; margin-bottom:10px;
+}
+.oauth-open-btn:active { opacity:.85; }
+.oauth-paste-row { display:flex; gap:8px; align-items:stretch; }
+.oauth-paste-input {
+  flex:1; font-size:13px; font-family:inherit; font-weight:500;
+  padding:9px 11px; border:1.5px solid var(--border); border-radius:var(--rad-sm);
+  background:var(--bg); color:var(--text); outline:none;
+}
+.oauth-paste-input:focus { border-color:var(--teal-mid); }
+.oauth-paste-btn {
+  padding:9px 14px; background:var(--teal); color:#fff;
+  border:none; border-radius:var(--rad-sm); font-size:13px; font-weight:800;
+  font-family:inherit; cursor:pointer; white-space:nowrap;
+}
+.oauth-cancel {
+  width:100%; padding:9px; background:none; border:1.5px solid var(--border);
+  border-radius:var(--rad-sm); font-size:13px; font-weight:700; color:var(--text2);
+  font-family:inherit; cursor:pointer; margin-top:8px;
+}
 </style>
 </head>
 <body>
@@ -301,6 +390,50 @@ body {
 </nav>
 
 <main class="content" id="main-content"></main>
+
+<!-- OAuth Sheet (overlay) -->
+<div class="oauth-overlay" id="oauth-overlay" style="display:none" onclick="oauthOverlayClick(event)">
+  <div class="oauth-sheet">
+    <h2>🔑 Obtener Access Token</h2>
+    <p>El token de Google autoriza a la app para leer y escribir tu archivo de estado en Drive. Dura ~1 hora; renuévalo cuando el punto de sync se ponga rojo.</p>
+
+    <div class="oauth-steps">
+      <div class="oauth-step">
+        <div class="step-num">1</div>
+        <div class="step-txt">Toca <b>"Abrir OAuth Playground"</b> — se abre en el navegador</div>
+      </div>
+      <div class="oauth-step">
+        <div class="step-num">2</div>
+        <div class="step-txt">En la lista izquierda busca <b>Drive API v3</b> → marca <b>drive.file</b> → clic <b>"Authorize APIs"</b></div>
+      </div>
+      <div class="oauth-step">
+        <div class="step-num">3</div>
+        <div class="step-txt">Inicia sesión con tu cuenta Google (la misma donde está el archivo)</div>
+      </div>
+      <div class="oauth-step">
+        <div class="step-num">4</div>
+        <div class="step-txt">Clic en <b>"Exchange authorization code for tokens"</b></div>
+      </div>
+      <div class="oauth-step">
+        <div class="step-num">5</div>
+        <div class="step-txt">Copia el <b>Access token</b> (empieza con <b>ya29.</b>) y pégalo abajo</div>
+      </div>
+    </div>
+
+    <button class="oauth-open-btn" onclick="openOAuthPlayground()">
+      Abrir OAuth Playground →
+    </button>
+
+    <div class="oauth-paste-row">
+      <input class="oauth-paste-input" id="oauth-token-input"
+        placeholder="Pega aquí el token  ya29.xxxxx…"
+        type="password" autocomplete="off">
+      <button class="oauth-paste-btn" onclick="applyOAuthToken()">Guardar</button>
+    </div>
+
+    <button class="oauth-cancel" onclick="closeOAuthSheet()">Cancelar</button>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════
@@ -367,8 +500,10 @@ const BASE_STORES = [
 ═══════════════════════════════════════ */
 let state = {
   checks:   { walmart:{}, sams:{}, heb:{}, frutas:{} },
-  overrides: {},          // { "walmart_3": {q:2, p:95} }
-  driveToken:'', driveFileId:'', lastSync:null
+  overrides: {},
+  driveToken:'', driveFileId:'',
+  tokenSavedAt: null,
+  lastSync:null
 };
 let STORES = [];          // computed: BASE_STORES + overrides applied
 let activeTab  = -1;
@@ -594,8 +729,34 @@ function renderCard(si) {
   </div>`;
 }
 
+function driveSVG() {
+  return `<svg width="20" height="18" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0a7.9 7.9 0 003.3 3.3z" fill="#0066DA"/>
+    <path d="M43.65 25L29.9 1.2a7.9 7.9 0 00-3.3 3.3L.65 49.55a7.9 7.9 0 000 7.9h27.5z" fill="#00AC47"/>
+    <path d="M73.55 76.8a7.9 7.9 0 003.3-3.3l1.6-2.75 7.65-13.25a7.9 7.9 0 000-7.9H59.6l5.8 11.2z" fill="#EA4335"/>
+    <path d="M43.65 25L57.4 1.2a7.7 7.7 0 00-6.85-1.2H36.75a7.7 7.7 0 00-6.85 1.2z" fill="#00832D"/>
+    <path d="M59.6 53.45H27.7L13.95 77.1c1.35.8 2.9 1.2 4.6 1.2h49.8a7.9 7.9 0 004.6-1.2z" fill="#2684FC"/>
+    <path d="M73.4 26.45l-13.1-22.7a7.9 7.9 0 00-2.9-2.55L43.65 25l15.95 28.45H87.1a7.9 7.9 0 000-7.9z" fill="#FFBA00"/>
+  </svg>`;
+}
+function googleSVG() {
+  return `<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
+}
+
+function tokenStatus() {
+  if (!state.driveToken) return { cls:'none', label:'Sin token' };
+  const age = state.tokenSavedAt ? Date.now() - state.tokenSavedAt : null;
+  if (age !== null && age > 50 * 60 * 1000)
+    return { cls:'expiry', label:'⚠️ Token próximo a expirar' };
+  return { cls:'ok', label:'✓ Token activo' };
+}
+
 function renderDrivePanel() {
   if (!showDrive) return '';
+  const ts = tokenStatus();
+  const hasToken = !!state.driveToken;
+  const hasFile  = !!state.driveFileId;
+
   return `<div class="drive-panel">
     <div class="drive-header">
       <svg class="drive-logo" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
@@ -606,24 +767,45 @@ function renderDrivePanel() {
         <path d="M59.6 53.45H27.7L13.95 77.1c1.35.8 2.9 1.2 4.6 1.2h49.8a7.9 7.9 0 004.6-1.2z" fill="#2684FC"/>
         <path d="M73.4 26.45l-13.1-22.7a7.9 7.9 0 00-2.9-2.55L43.65 25l15.95 28.45H87.1a7.9 7.9 0 000-7.9z" fill="#FFBA00"/>
       </svg>
-      <div>
+      <div style="flex:1">
         <div class="drive-title-txt">Google Drive Sync</div>
         <div class="drive-subtitle">Sincronización entre dispositivos</div>
       </div>
     </div>
+
+    <!-- Token status pill -->
+    <div class="token-pill ${ts.cls}">${ts.label}</div>
+
+    <!-- Botón principal: obtener / renovar token -->
+    <button class="oauth-btn ${hasToken ? 'renew' : 'google'}" onclick="showOAuthSheet()">
+      ${hasToken ? '🔄 Renovar Access Token' : googleSVG() + ' Obtener token con Google'}
+    </button>
+
+    <div class="or-divider">o pega el token manualmente</div>
+
     <div class="field-group">
       <div class="field-label">Access Token</div>
-      <input class="field-input" id="fi-token" type="password" placeholder="ya29.xxxxx..." value="${state.driveToken || ''}">
+      <input class="field-input" id="fi-token" type="password"
+        placeholder="ya29.xxxxx…" value="${state.driveToken || ''}">
     </div>
+
     <div class="field-group">
-      <div class="field-label">File ID del archivo de estado</div>
-      <input class="field-input" id="fi-fileid" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="${state.driveFileId || ''}">
+      <div class="field-label">File ID del archivo de estado en Drive</div>
+      <input class="field-input" id="fi-fileid"
+        placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+        value="${state.driveFileId || ''}">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;font-weight:500">
+        Está en la URL de Drive: …/file/d/<b style="color:var(--text2)">ESTE_ES_EL_ID</b>/view
+      </div>
     </div>
-    <button class="save-btn" onclick="saveDriveConfig()">Guardar y conectar</button>
-    <div class="drive-hint">
-      El estado (checks + cantidades + precios) se guarda en Drive cada vez que haces un cambio.<br>
-      Usa el mismo File ID en ambos dispositivos para sincronizar.<br>
-      Obtén tu token en <a href="https://developers.google.com/oauthplayground" target="_blank">OAuth Playground →</a>
+
+    <button class="save-btn" onclick="saveDriveConfig()">
+      ${hasToken && hasFile ? '✓ Actualizar configuración' : 'Guardar y conectar'}
+    </button>
+
+    <div class="drive-hint" style="margin-top:10px">
+      Los cambios (checks, cantidades, precios) se sincronizan automáticamente cada 30 seg.<br>
+      Usa el mismo File ID en ambos celulares.
     </div>
   </div>`;
 }
@@ -656,6 +838,83 @@ function render() {
 }
 
 /* ═══════════════════════════════════════
+   OAUTH FLOW
+═══════════════════════════════════════ */
+const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
+
+function showOAuthSheet() {
+  const overlay = document.getElementById('oauth-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+      const inp = document.getElementById('oauth-token-input');
+      if (inp) inp.focus();
+    }, 300);
+  }
+}
+function closeOAuthSheet() {
+  const overlay = document.getElementById('oauth-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+function oauthOverlayClick(e) {
+  // Cerrar al tocar fuera del sheet
+  if (e.target === document.getElementById('oauth-overlay')) closeOAuthSheet();
+}
+function openOAuthPlayground() {
+  window.open(OAUTH_PLAYGROUND, '_blank');
+}
+function applyOAuthToken() {
+  const inp = document.getElementById('oauth-token-input');
+  if (!inp) return;
+  const token = inp.value.trim();
+  if (!token || !token.startsWith('ya29.')) {
+    inp.style.borderColor = 'var(--coral-mid)';
+    inp.placeholder = '⚠️ El token debe empezar con ya29.';
+    setTimeout(() => {
+      inp.style.borderColor = '';
+      inp.placeholder = 'Pega aquí el token  ya29.xxxxx…';
+    }, 2500);
+    return;
+  }
+  state.driveToken   = token;
+  state.tokenSavedAt = Date.now();
+  save();
+  closeOAuthSheet();
+  // Actualizar input del panel si está visible
+  const fi = document.getElementById('fi-token');
+  if (fi) fi.value = token;
+  // Re-render panel con nuevo estado
+  render();
+  // Si ya tenemos fileId, conectar y sincronizar
+  if (state.driveFileId) {
+    syncStatus = 'syncing';
+    updateSyncUI();
+    startPolling();
+    triggerSync();
+  }
+}
+
+/* Token expiry watcher — avisa en sync bar cuando queda poco */
+function checkTokenExpiry() {
+  if (!state.driveToken || !state.tokenSavedAt) return;
+  const age = Date.now() - state.tokenSavedAt;
+  const WARN_AT = 50 * 60 * 1000;   // avisa a los 50 min
+  const EXPIRE  = 60 * 60 * 1000;   // expira ~60 min
+  if (age >= EXPIRE) {
+    syncStatus = 'error';
+    const lbl = document.getElementById('sync-label');
+    if (lbl) lbl.textContent = '⚠️ Token expirado — toca ⚙️ para renovar';
+    updateSyncUI();
+  } else if (age >= WARN_AT) {
+    const lbl = document.getElementById('sync-label');
+    if (lbl) {
+      const minLeft = Math.round((EXPIRE - age) / 60000);
+      lbl.textContent = `⚠️ Token expira en ~${minLeft} min — toca ⚙️`;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════
    DRIVE PANEL
 ═══════════════════════════════════════ */
 function toggleDrivePanel() {
@@ -664,7 +923,11 @@ function toggleDrivePanel() {
   if (showDrive) setTimeout(() => { const el = document.getElementById('fi-token'); if(el) el.focus(); }, 80);
 }
 function saveDriveConfig() {
-  state.driveToken  = document.getElementById('fi-token').value.trim();
+  const newToken = document.getElementById('fi-token').value.trim();
+  if (newToken && newToken !== state.driveToken) {
+    state.driveToken   = newToken;
+    state.tokenSavedAt = Date.now();
+  }
   state.driveFileId = document.getElementById('fi-fileid').value.trim();
   save(); showDrive = false;
   if (state.driveToken && state.driveFileId) { startPolling(); triggerSync(); }
@@ -745,10 +1008,43 @@ function updateSyncUI() {
    BOOT
 ═══════════════════════════════════════ */
 load();
+
+// Soporte para shortcuts de manifest.json (?tab=N)
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.has('tab')) {
+  const t = parseInt(urlParams.get('tab'), 10);
+  if (!isNaN(t) && t >= 0 && t <= 3) activeTab = t;
+}
+
 render();
+
+// Sincronizar tab activa visualmente
+document.querySelectorAll('.tab').forEach((btn, i) => {
+  const map = [-1, 0, 1, 2, 3];
+  btn.classList.toggle('active', map[i] === activeTab);
+});
+
 if (state.driveToken && state.driveFileId) {
   startPolling();
   setTimeout(triggerSync, 600);
+}
+
+// Verificar expiración del token cada 2 minutos
+setInterval(checkTokenExpiry, 2 * 60 * 1000);
+
+// Registrar Service Worker (modo offline)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[SW] Registrado:', reg.scope);
+        // Escuchar mensajes del SW (background sync)
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data && e.data.type === 'TRIGGER_SYNC') triggerSync();
+        });
+      })
+      .catch(err => console.warn('[SW] Error al registrar:', err));
+  });
 }
 </script>
 </body>

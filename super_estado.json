@@ -1,0 +1,10 @@
+{
+  "checks": {
+    "walmart":  {},
+    "sams":     {},
+    "heb":      {},
+    "frutas":   {}
+  },
+  "overrides": {},
+  "version": 0
+}
