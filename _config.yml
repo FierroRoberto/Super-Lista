@@ -1,5 +1,0 @@
-# Evita que Jekyll procese la carpeta y sirva los archivos tal cual
-include:
-  - sw.js
-  - manifest.json
-  - icons
