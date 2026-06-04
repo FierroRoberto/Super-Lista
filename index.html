@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#138A68">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Súper">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>Lista del Súper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Google Identity Services — maneja OAuth sin backend ni CORS -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F4F2EE;--surface:#FFF;--surface2:#F9F8F5;
+  --border:#E4E0D8;--border2:#CCC8BF;
+  --text:#1C1B18;--text2:#706D64;--text3:#A09D96;
+  --t:#0C5C47;--tm:#138A68;--tl:#D8F0E8;--tx:#EEF9F4;
+  --a:#7A4508;--am:#B86B12;--al:#FDECD3;--ax:#FEF6EA;
+  --c:#8C3219;--cm:#C94E2A;--cl:#FAE4DB;--cx:#FDF2EE;
+  --p:#4840A8;--pm:#7068CC;--pl:#E8E6FC;--px:#F3F2FE;
+  --rad:14px;--rads:9px;--radx:6px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shm:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+}
+body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;max-width:430px;margin:0 auto;-webkit-font-smoothing:antialiased}
+
+/* ── Header ── */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 14px 10px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-ico{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--tm),var(--t));display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(19,138,104,.35)}
+.brand h1{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand p{font-size:11px;color:var(--text2);font-weight:500;margin-top:1px}
+.hdr-btns{display:flex;gap:6px}
+.ico-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:background .15s}
+.ico-btn:active{background:var(--bg)}
+.ico-btn.on{background:var(--tx);border-color:var(--tm)}
+.sync-bar{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radx);font-size:11.5px;cursor:pointer}
+.sync-bar:active{background:var(--border)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}
+.dot.ok{background:#22C78B}
+.dot.spin{background:var(--am);animation:blink 1s infinite}
+.dot.err{background:var(--cm)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-lbl{flex:1;color:var(--text2);font-weight:500}
+.sync-btn{font-size:11px;font-weight:800;color:var(--tm);background:none;border:none;cursor:pointer;padding:2px 4px}
+
+/* ── Edit banner ── */
+.edit-ban{background:var(--tx);border-bottom:1px solid var(--tl);padding:7px 14px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--t)}
+.edit-ban span{flex:1}
+
+/* ── Tabs ── */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 12px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid transparent;cursor:pointer;background:transparent;white-space:nowrap;transition:all .15s}
+.tab.all{color:var(--text2);border-color:var(--border)}.tab.all.on{background:var(--text);color:#fff;border-color:var(--text)}
+.tab.t0{color:var(--t);border-color:var(--tl)}.tab.t0.on{background:var(--t);color:#fff;border-color:var(--t)}
+.tab.t1{color:var(--a);border-color:var(--al)}.tab.t1.on{background:var(--am);color:#fff;border-color:var(--am)}
+.tab.t2{color:var(--c);border-color:var(--cl)}.tab.t2.on{background:var(--cm);color:#fff;border-color:var(--cm)}
+.tab.t3{color:var(--p);border-color:var(--pl)}.tab.t3.on{background:var(--pm);color:#fff;border-color:var(--pm)}
+
+/* ── Content ── */
+.content{padding:12px 12px 90px}
+.total-banner{background:var(--text);color:#fff;border-radius:var(--rad);padding:13px 15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;box-shadow:var(--shm)}
+.total-banner .lbl{font-size:10.5px;font-weight:700;opacity:.55;text-transform:uppercase;letter-spacing:.5px}
+.total-banner .amt{font-size:24px;font-weight:800;letter-spacing:-1px;margin-top:2px}
+.total-banner .pct{font-size:16px;font-weight:800;text-align:right}
+
+/* ── Store card ── */
+.card{background:var(--surface);border-radius:var(--rad);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh);animation:fadeUp .2s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card-head{padding:11px 13px 9px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ch0{background:var(--tx)}.ch1{background:var(--ax)}.ch2{background:var(--cx)}.ch3{background:var(--px)}
+.card-title{font-size:14px;font-weight:800;letter-spacing:-.3px}
+.card-sub{font-size:11.5px;font-weight:500;margin-top:3px}
+.cs0{color:var(--tm)}.cs1{color:var(--am)}.cs2{color:var(--cm)}.cs3{color:var(--pm)}
+.reset-btn{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1.5px solid;cursor:pointer;background:var(--surface);white-space:nowrap;transition:all .15s}
+.rb0{color:var(--t);border-color:var(--tm)}.rb0:active{background:var(--t);color:#fff}
+.rb1{color:var(--a);border-color:var(--am)}.rb1:active{background:var(--am);color:#fff}
+.rb2{color:var(--c);border-color:var(--cm)}.rb2:active{background:var(--cm);color:#fff}
+.rb3{color:var(--p);border-color:var(--pm)}.rb3:active{background:var(--pm);color:#fff}
+.prog-wrap{padding:7px 13px 9px;display:flex;align-items:center;gap:8px}
+.prog{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .4s}
+.pf0{background:var(--tm)}.pf1{background:var(--am)}.pf2{background:var(--cm)}.pf3{background:var(--pm)}
+.prog-pct{font-size:11px;font-weight:700;color:var(--text3);min-width:26px;text-align:right}
+
+/* ── Item row normal ── */
+.item{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .1s}
+.item:last-child{border-bottom:none}
+.item:active{background:var(--bg)}
+.item.done{opacity:.42}
+.cb{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.cb.on0{background:var(--tm);border-color:var(--tm)}.cb.on1{background:var(--am);border-color:var(--am)}
+.cb.on2{background:var(--cm);border-color:var(--cm)}.cb.on3{background:var(--pm);border-color:var(--pm)}
+.cb svg{display:none}.cb.on0 svg,.cb.on1 svg,.cb.on2 svg,.cb.on3 svg{display:block}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item.done .item-name{text-decoration:line-through}
+.item-qty{font-size:11px;color:var(--text2);margin-top:1px;font-weight:500}
+.item-price{font-size:12px;font-weight:700;color:var(--text3);flex-shrink:0}
+
+/* ── Item row edit ── */
+.item-edit{display:flex;align-items:center;gap:7px;padding:7px 13px;border-bottom:1px solid var(--border)}
+.item-edit:last-child{border-bottom:none}
+.item-edit-name{font-size:12.5px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edit-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;text-align:center;margin-bottom:2px}
+.stepper{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:7px;overflow:hidden;flex-shrink:0}
+.stbtn{width:26px;height:26px;border:none;background:var(--surface2);font-size:15px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:background .1s}
+.stbtn:active{background:var(--border)}
+.stval{min-width:24px;text-align:center;font-size:12px;font-weight:800;border-left:1px solid var(--border);border-right:1px solid var(--border);height:26px;line-height:26px}
+.price-inp-wrap{display:flex;align-items:center;gap:2px;border:1.5px solid var(--border);border-radius:7px;padding:0 6px;height:26px;flex-shrink:0;background:var(--surface2)}
+.price-inp-wrap:focus-within{border-color:var(--tm);background:var(--surface)}
+.price-inp-wrap span{font-size:11px;color:var(--text3);font-weight:700}
+.price-inp{width:40px;border:none;background:transparent;font-size:12px;font-weight:800;color:var(--text);font-family:inherit;outline:none;text-align:right}
+
+/* ── Subtotal ── */
+.subtotal{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--surface2);border-top:1px solid var(--border)}
+.sub-lbl{font-size:11.5px;color:var(--text2);font-weight:600}
+.sub-val{font-size:14px;font-weight:800}
+.sv0{color:var(--t)}.sv1{color:var(--a)}.sv2{color:var(--c)}.sv3{color:var(--p)}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tm);color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 4px 16px rgba(19,138,104,.45);z-index:150;white-space:nowrap;transition:transform .15s,box-shadow .15s}
+.fab:active{transform:translateX(-50%) scale(.95)}
+
+/* ── Overlays generales ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:200;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--surface);border-radius:var(--rad) var(--rad) 0 0;padding:20px 18px 32px;width:100%;max-width:430px;animation:slideUp .22s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(60px)}to{transform:none}}
+.sheet-title{font-size:15px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+.sheet-sub{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:16px;line-height:1.5}
+
+/* ── Panel Drive (sheet) ── */
+.cfg-section{font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.cfg-section:first-of-type{margin-top:0}
+.field{margin-bottom:9px}
+.field-lbl{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.field input{width:100%;font-size:13px;font-family:inherit;font-weight:600;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--rads);background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--tm);background:var(--surface)}
+.field input::placeholder{color:var(--text3);font-weight:500}
+.field-hint{font-size:11px;color:var(--text3);margin-top:3px;font-weight:500;line-height:1.4}
+.btn-primary{width:100%;padding:11px;background:var(--tm);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;transition:opacity .15s;margin-bottom:7px}
+.btn-primary:active{opacity:.85}
+.btn-primary.amber{background:var(--am)}
+.btn-secondary{width:100%;padding:10px;background:none;border:1.5px solid var(--border);border-radius:var(--rads);font-size:13px;font-weight:700;color:var(--text2);font-family:inherit;cursor:pointer;margin-bottom:7px}
+.btn-secondary:active{background:var(--bg)}
+.status-row{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:var(--radx);margin-bottom:10px;font-size:12.5px}
+.status-row.ok{background:var(--tx)}.status-row.warn{background:var(--ax)}.status-row.fail{background:var(--cx)}
+.status-row b{display:block;font-weight:800;margin-bottom:2px}
+.status-row span{color:var(--text2);font-size:11.5px;line-height:1.4}
+
+/* ── Add-item sheet ── */
+.store-opt{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:var(--rads);border:1.5px solid var(--border);cursor:pointer;margin-bottom:8px;transition:all .15s}
+.store-opt:active{opacity:.8}
+.so0:active,.so0.sel{background:var(--tx);border-color:var(--tm)}
+.so1:active,.so1.sel{background:var(--ax);border-color:var(--am)}
+.so2:active,.so2.sel{background:var(--cx);border-color:var(--cm)}
+.so3:active,.so3.sel{background:var(--px);border-color:var(--pm)}
+.so-emoji{font-size:20px}
+.so-info{flex:1}.so-name{font-size:13.5px;font-weight:800}.so-count{font-size:11px;color:var(--text2);margin-top:1px;font-weight:500}
+.store-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;margin-bottom:12px}
+.sb0{background:var(--tx);color:var(--t)}.sb1{background:var(--ax);color:var(--a)}
+.sb2{background:var(--cx);color:var(--c)}.sb3{background:var(--px);color:var(--p)}
+.back-btn{display:flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--text2);font-family:inherit;margin-bottom:12px;padding:0}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;border-radius:50px;padding:9px 18px;font-size:12.5px;font-weight:700;z-index:400;white-space:nowrap;pointer-events:none;animation:tIn .22s ease,tOut .3s ease 1.8s forwards}
+@keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes tOut{to{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="brand">
+      <div class="brand-ico">🛒</div>
+      <div>
+        <h1>Lista del Súper</h1>
+        <p id="gstats">Cargando…</p>
+      </div>
+    </div>
+    <div class="hdr-btns">
+      <button class="ico-btn" id="edit-btn" onclick="toggleEdit()" title="Editar">✏️</button>
+      <button class="ico-btn" id="cfg-btn"  onclick="openCfg()"   title="Drive">⚙️</button>
+    </div>
+  </div>
+  <div class="sync-bar" onclick="syncTap()">
+    <div class="dot" id="dot"></div>
+    <span class="sync-lbl" id="slbl">Verificando…</span>
+    <button class="sync-btn" onclick="event.stopPropagation();doSync()">↻ Sync</button>
+  </div>
+</header>
+
+<div id="edit-banner" class="edit-ban" style="display:none">
+  <span>✏️ Modo edición activo</span>
+  <button onclick="toggleEdit()" style="background:none;border:none;font-size:12px;font-weight:800;color:var(--t);cursor:pointer">Listo ✓</button>
+</div>
+
+<!-- ── TABS ── -->
+<nav class="tabs">
+  <button class="tab all on" onclick="setTab(-1)">Todas</button>
+  <button class="tab t0"     onclick="setTab(0)">🏪 Walmart</button>
+  <button class="tab t1"     onclick="setTab(1)">🏪 SAM'S</button>
+  <button class="tab t2"     onclick="setTab(2)">🏪 HEB</button>
+  <button class="tab t3"     onclick="setTab(3)">🥦 Frutas</button>
+</nav>
+
+<main class="content" id="content"></main>
+
+<!-- FAB -->
+<button class="fab" onclick="openAdd()">＋ Agregar artículo</button>
+
+<!-- OVERLAY: Configuración Drive -->
+<div class="overlay" id="cfg-overlay" style="display:none" onclick="if(event.target===this)closeCfg()">
+  <div class="sheet" id="cfg-sheet"></div>
+</div>
+
+<!-- OVERLAY: Agregar artículo paso 1 — elegir tienda -->
+<div class="overlay" id="add-overlay" style="display:none" onclick="if(event.target===this)closeAdd()">
+  <div class="sheet" id="add-sheet"></div>
+</div>
+
+<!-- Toast container -->
+<div id="toasts"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATOS BASE (del Excel Super.xlsx)
+═══════════════════════════════════════════════════ */
+const BASE = [
+  { id:'walmart', name:'Walmart', emoji:'🏪', c:0, prices:true, items:[
+    {n:'Pan Higos',q:1,p:50},{n:'Huevo',q:2,p:80},{n:'Chorizo',q:2,p:35},
+    {n:'Tocino San Rafael',q:1,p:100},{n:'Jamón',q:1,p:70},{n:'Queso',q:1,p:100},
+    {n:'Bolillos',q:1,p:20},{n:'Yogurt Bebible',q:1,p:110},{n:'Crema',q:1,p:40},
+    {n:'Mantequilla',q:1,p:80},{n:'Yogurt Griego Danone',q:1,p:55},{n:'Leche',q:1,p:80},
+    {n:'Jugo Naranja',q:1,p:50},{n:'Pan Artesano',q:1,p:60},{n:'Tortilla Harina',q:1,p:40},
+    {n:'Pan Empanizar',q:1,p:30},{n:'Crema Cacahuate',q:1,p:70},{n:'Tostadas',q:1,p:40},
+    {n:'Harina Hot Cakes',q:1,p:40},{n:'Media Crema',q:2,p:20},{n:'Clavel',q:1,p:20},
+    {n:'Lechera',q:1,p:25},{n:'Choco Don Gustavo',q:1,p:35},{n:'Galletas Saladas',q:1,p:25},
+    {n:'Cerillos',q:1,p:20},{n:'Granola',q:1,p:80},{n:'Papas Francesa',q:1,p:70},
+    {n:'Vinagre',q:1,p:20},{n:'Aceite Oliva-Aguacate',q:1,p:150},{n:'Frijol Isadora',q:3,p:16},
+    {n:'Azúcar',q:1,p:40},{n:'Arroz',q:1,p:30},{n:'Frijol',q:1,p:16},
+    {n:'Aderezo Ranch',q:1,p:30},{n:'Aderezo Mil Islas',q:1,p:30},{n:'Catsup',q:1,p:80},
+    {n:'Mostaza',q:1,p:40},{n:'Mayonesa',q:1,p:80},{n:'Sopa Fideo',q:1,p:15},
+    {n:'Spagueti',q:1,p:15},{n:'Atún',q:2,p:20},{n:'Lata Elote',q:1,p:20},
+    {n:'Lata Campesina',q:1,p:20},{n:'Chile San Marcos',q:1,p:35},{n:'Tilapia',q:2,p:40},
+    {n:'Bistec',q:3,p:125},{n:'Desechable',q:1,p:30},{n:'Servitoallas',q:2,p:30},
+    {n:'Papel Aluminio',q:1,p:40},{n:'Pañales',q:1,p:200},{n:'Croquetas',q:1,p:130},
+    {n:'Lavatrastes Axion',q:1,p:70},{n:'Poett',q:1,p:40},{n:'Cloro',q:1,p:30},
+    {n:'Detergente en polvo',q:1,p:35},{n:'Bold Detergente Ropa',q:1,p:140},
+    {n:'Sobres',q:3,p:80},{n:'Desodorante Rexona',q:1,p:70},{n:'Desodorante Obao',q:1,p:45},
+    {n:'Desodorante Axe Azul',q:1,p:50},{n:'Desodorante Mío',q:1,p:70},
+    {n:'Cepillos Dientes',q:1,p:50},{n:'Pasta Dientes',q:2,p:50},
+    {n:'Toalla Saba Buenas Noches',q:1,p:50},{n:'Saba Panti Multiestilos',q:1,p:30},
+    {n:'Papel Pétalo Rendimax',q:1,p:180},{n:'Aceite Almendra',q:1,p:45},{n:'Toallas Húmedas',q:1,p:45}
+  ]},
+  { id:'sams', name:"SAM'S Club", emoji:'🏪', c:1, prices:true, items:[
+    {n:'Uva',q:1,p:110},{n:'Pollo',q:1,p:125},{n:'Microdyn',q:1,p:100},
+    {n:'Guarnición',q:1,p:100},{n:'Leche Soya',q:1,p:180},{n:'Jabón Barra',q:1,p:150}
+  ]},
+  { id:'heb', name:'HEB', emoji:'🏪', c:2, prices:true, items:[
+    {n:'Molida Res',q:1,p:125},{n:'Café',q:1,p:150},{n:'Galleta Arroz',q:1,p:35},{n:'Manteca Cerdo',q:1,p:50}
+  ]},
+  { id:'frutas', name:'Frutas y Verduras', emoji:'🥦', c:3, prices:false, items:[
+    {n:'Papaya',q:1},{n:'Plátano',q:4},{n:'Limón',q:10},{n:'Papa',q:6},
+    {n:'Cebolla',q:2},{n:'Tomatillo',q:6},{n:'Ajo',q:2},{n:'Pepino',q:1},
+    {n:'Cilantro',q:1},{n:'Sandía',q:1},{n:'Piña',q:1},{n:'Manzana',q:6},
+    {n:'Mandarina',q:6},{n:'Naranja',q:10},{n:'Mango',q:10},{n:'Tomate',q:6},
+    {n:'Lechuga',q:1},{n:'Papas Fritas',q:1},{n:'Aguacate',q:4}
+  ]}
+];
+
+/* ═══════════════════════════════════════════════════
+   ESTADO — una sola fuente de verdad en localStorage
+═══════════════════════════════════════════════════ */
+const LS_KEY = 'superLista_v5';
+let S = {                    // S = state global
+  checks:   {},              // { "walmart_3": true }
+  overrides:{},              // { "walmart_3": {q:2,p:95} }
+  extras:   {},              // { "walmart": [{n,q,p}] }
+  fileId:   '',              // Google Drive File ID
+  clientId: '',              // OAuth Client ID (para GIS)
+  token:    '',              // access_token vigente
+  tokenAt:  0,              // timestamp cuando se obtuvo
+  lastVer:  0               // version del JSON en Drive
+};
+let STORES = [];             // copia con overrides+extras aplicados
+let tab     = -1;
+let editMode= false;
+let syncSt  = 'off';         // 'off' | 'ok' | 'busy' | 'err'
+let pollTmr = null;
+let writeTmr= null;
+
+/* ── Cargar / Guardar ── */
+function loadS() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) S = { ...S, ...JSON.parse(raw) };
+    // Migración: importar versiones anteriores si no hay v5
+    if (!raw) {
+      for (const k of ['superLista_v4','superLista_v3','superLista_v2']) {
+        const old = localStorage.getItem(k);
+        if (old) {
+          try {
+            const o = JSON.parse(old);
+            if (o.checks)    S.checks    = o.checks;
+            if (o.overrides) S.overrides = o.overrides;
+            if (o.driveFileId) S.fileId  = o.driveFileId;
+            if (o.driveToken)  S.token   = o.driveToken;
+            if (o.oauthClientId) S.clientId = o.oauthClientId;
+            if (o.customItems) S.extras  = o.customItems;
+          } catch(e) {}
+          break;
+        }
+      }
+    }
+  } catch(e) {}
+  buildStores();
+}
+function saveS() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {}
+}
+
+/* ── Construir STORES con overrides y extras ── */
+function buildStores() {
+  STORES = BASE.map(b => {
+    const extraItems = S.extras[b.id] || [];
+    const allItems   = [...b.items, ...extraItems];
+    return {
+      ...b,
+      items: allItems.map((item, i) => {
+        const ov = S.overrides[b.id+'_'+i] || {};
+        return { n: item.n, q: ov.q ?? item.q, p: ov.p ?? item.p };
+      })
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   CHECKS / EDICIÓN
+═══════════════════════════════════════════════════ */
+function ck(sid, i) { return !!S.checks[sid+'_'+i]; }
+
+function toggle(sid, i) {
+  if (editMode) return;
+  S.checks[sid+'_'+i] = !S.checks[sid+'_'+i];
+  saveS(); render(); schedWrite();
+}
+
+function resetStore(sid) {
+  Object.keys(S.checks).forEach(k => { if (k.startsWith(sid+'_')) delete S.checks[k]; });
+  saveS(); render(); schedWrite();
+}
+
+function setQty(sid, i, delta) {
+  const key = sid+'_'+i;
+  const cur  = STORES.find(s=>s.id===sid).items[i].q;
+  const next = Math.max(1, cur + delta);
+  if (next === cur) return;
+  if (!S.overrides[key]) S.overrides[key] = {};
+  S.overrides[key].q = next;
+  buildStores(); saveS(); schedWrite();
+  const el = document.getElementById('qv_'+sid+'_'+i);
+  if (el) el.textContent = next;
+  updateSubtotals();
+}
+
+function setPrice(sid, i, val) {
+  const v = parseInt(val, 10);
+  if (isNaN(v) || v < 0) return;
+  const key = sid+'_'+i;
+  if (!S.overrides[key]) S.overrides[key] = {};
+  S.overrides[key].p = v;
+  buildStores(); saveS(); schedWrite();
+  updateSubtotals();
+}
+
+/* ═══════════════════════════════════════════════════
+   STATS
+═══════════════════════════════════════════════════ */
+function storeStats(si) {
+  const s = STORES[si], n = s.items.length;
+  const done = s.items.filter((_,i) => ck(s.id,i)).length;
+  return { n, done, pct: n ? Math.round(done/n*100) : 0 };
+}
+function subtotal(si) {
+  const s = STORES[si];
+  if (!s.prices) return null;
+  return s.items.reduce((sum,item,i) => ck(s.id,i) ? sum + item.q*(item.p||0) : sum, 0);
+}
+function grandTotal() {
+  return STORES.reduce((sum,_,i)=>{ const sub=subtotal(i); return sub!=null?sum+sub:sum; },0);
+}
+function globalDone()  { return STORES.reduce((s,_,i)=>s+storeStats(i).done,0); }
+function globalTotal() { return STORES.reduce((s,b)=>s+b.items.length,0); }
+
+/* ── Actualizar subtotales sin re-render completo ── */
+function updateSubtotals() {
+  STORES.forEach((s,i) => {
+    const sub = subtotal(i);
+    const el  = document.getElementById('sub_'+s.id);
+    if (el && sub!==null) el.textContent = '$'+sub.toLocaleString('es-MX');
+    const st  = storeStats(i);
+    const el2 = document.getElementById('csub_'+s.id);
+    if (el2) el2.textContent = `${st.done}/${st.n} marcados${sub!=null?' · $'+sub.toLocaleString('es-MX'):''}`;
+  });
+  const gt = grandTotal();
+  const el = document.getElementById('gtotal');
+  if (el) el.textContent = '$'+gt.toLocaleString('es-MX');
+  const gs = document.getElementById('gstats');
+  if (gs) gs.textContent = `${globalDone()}/${globalTotal()} artículos`;
+}
+
+/* ═══════════════════════════════════════════════════
+   TABS / EDIT
+═══════════════════════════════════════════════════ */
+function setTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('on', [-1,0,1,2,3][i] === t);
+  });
+  render();
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  document.getElementById('edit-btn').classList.toggle('on', editMode);
+  document.getElementById('edit-banner').style.display = editMode ? 'flex' : 'none';
+  render();
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+const CHK_SVG = `<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function renderItemNormal(s, item, i) {
+  const on = ck(s.id, i);
+  const total = s.prices ? item.q*(item.p||0) : null;
+  return `<div class="item${on?' done':''}" onclick="toggle('${s.id}',${i})">
+    <div class="cb${on?' on'+s.c:''}">${on?CHK_SVG:''}</div>
+    <div class="item-info">
+      <div class="item-name">${item.n}</div>
+      <div class="item-qty">${item.q} ${item.q>1?'pzas':'pza'}${item.p?' · $'+item.p+' c/u':''}</div>
+    </div>
+    ${total!==null?`<div class="item-price">$${total}</div>`:''}
+  </div>`;
+}
+
+function renderItemEdit(s, item, i) {
+  return `<div class="item-edit">
+    <div class="item-edit-name">${item.n}</div>
+    <div>
+      <div class="edit-lbl">Pzas</div>
+      <div class="stepper">
+        <button class="stbtn" onclick="setQty('${s.id}',${i},-1)">−</button>
+        <div class="stval" id="qv_${s.id}_${i}">${item.q}</div>
+        <button class="stbtn" onclick="setQty('${s.id}',${i},+1)">+</button>
+      </div>
+    </div>
+    ${s.prices?`<div>
+      <div class="edit-lbl">Precio</div>
+      <div class="price-inp-wrap"><span>$</span>
+        <input class="price-inp" type="number" inputmode="numeric" min="0"
+          value="${item.p||0}"
+          oninput="setPrice('${s.id}',${i},this.value)">
+      </div>
+    </div>`:''}
+  </div>`;
+}
+
+function renderCard(si) {
+  const s   = STORES[si];
+  const st  = storeStats(si);
+  const sub = subtotal(si);
+  const c   = s.c;
+  return `<div class="card">
+    <div class="card-head ch${c}">
+      <div style="flex:1;min-width:0">
+        <div class="card-title">${s.emoji} ${s.name}</div>
+        <div class="card-sub cs${c}" id="csub_${s.id}">${st.done}/${st.n} marcados${sub!=null?' · $'+sub.toLocaleString('es-MX'):''}</div>
+      </div>
+      ${!editMode?`<button class="reset-btn rb${c}" onclick="resetStore('${s.id}')">↺ Reset</button>`:''}
+    </div>
+    <div class="prog-wrap">
+      <div class="prog"><div class="prog-fill pf${c}" style="width:${st.pct}%"></div></div>
+      <div class="prog-pct">${st.pct}%</div>
+    </div>
+    <div>${s.items.map((item,i) => editMode?renderItemEdit(s,item,i):renderItemNormal(s,item,i)).join('')}</div>
+    ${sub!=null?`<div class="subtotal">
+      <span class="sub-lbl">Subtotal marcado</span>
+      <span class="sub-val sv${c}" id="sub_${s.id}">$${sub.toLocaleString('es-MX')}</span>
+    </div>`:''}
+  </div>`;
+}
+
+function render() {
+  const done=globalDone(), total=globalTotal(), gt=grandTotal();
+  document.getElementById('gstats').textContent = `${done}/${total} artículos`;
+  let html = '';
+  if (tab === -1) {
+    html += `<div class="total-banner">
+      <div><div class="lbl">Total en carrito</div><div class="amt" id="gtotal">$${gt.toLocaleString('es-MX')}</div></div>
+      <div><div class="lbl" style="text-align:right">Completado</div><div class="pct">${total?Math.round(done/total*100):0}%</div></div>
+    </div>`;
+    html += STORES.map((_,i)=>renderCard(i)).join('');
+  } else {
+    html += renderCard(tab);
+  }
+  document.getElementById('content').innerHTML = html;
+  updateSyncUI();
+}
+
+/* ═══════════════════════════════════════════════════
+   GOOGLE IDENTITY SERVICES — OAuth sin backend
+   Funciona en cualquier origen HTTPS. El token dura
+   1 hora pero se renueva con un solo click silencioso.
+═══════════════════════════════════════════════════ */
+let tokenClient = null;
+
+function initGIS() {
+  if (!S.clientId || !window.google?.accounts) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: S.clientId,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: (resp) => {
+      if (resp.error) { toast('❌ Error: ' + resp.error); return; }
+      S.token   = resp.access_token;
+      S.tokenAt = Date.now();
+      saveS();
+      syncSt = 'ok';
+      updateSyncUI();
+      closeCfg();
+      toast('✅ Conectado con Google Drive');
+      startPoll();
+      doSync();
+    }
+  });
+}
+
+function requestToken(prompt=true) {
+  if (!tokenClient) { initGIS(); }
+  if (!tokenClient) { toast('⚠️ Pon tu Client ID primero'); openCfg(); return; }
+  if (prompt) {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  } else {
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
+}
+
+function tokenExpired() {
+  if (!S.token || !S.tokenAt) return true;
+  return (Date.now() - S.tokenAt) > 55 * 60 * 1000;
+}
+
+/* Auto-renovar token antes de cada operación Drive */
+async function ensureToken() {
+  if (!tokenExpired()) return true;
+  if (!S.clientId) return false;
+  return new Promise(resolve => {
+    if (!tokenClient) initGIS();
+    if (!tokenClient) { resolve(false); return; }
+    const orig = tokenClient.callback;
+    tokenClient.callback = (resp) => {
+      tokenClient.callback = orig;
+      if (resp.error) { resolve(false); return; }
+      S.token   = resp.access_token;
+      S.tokenAt = Date.now();
+      saveS(); resolve(true);
+    };
+    tokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   DRIVE SYNC
+═══════════════════════════════════════════════════ */
+function schedWrite() {
+  if (!S.token || !S.fileId) return;
+  clearTimeout(writeTmr);
+  writeTmr = setTimeout(writeToD, 1500);
+}
+
+async function writeToD() {
+  if (!S.fileId) return;
+  const ok = await ensureToken();
+  if (!ok) { syncSt='err'; updateSyncUI(); return; }
+  syncSt='busy'; updateSyncUI();
+  const body = JSON.stringify({ checks:S.checks, overrides:S.overrides, extras:S.extras, version:Date.now() });
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/upload/drive/v3/files/${S.fileId}?uploadType=media`,
+      { method:'PATCH', headers:{'Authorization':'Bearer '+S.token,'Content-Type':'application/json'}, body }
+    );
+    if (r.ok) { S.lastVer=Date.now(); syncSt='ok'; saveS(); }
+    else       { syncSt='err'; }
+  } catch(e) { syncSt='err'; }
+  updateSyncUI();
+}
+
+async function readFromD() {
+  if (!S.fileId) { syncSt='off'; updateSyncUI(); return; }
+  const ok = await ensureToken();
+  if (!ok) { syncSt='err'; updateSyncUI(); return; }
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${S.fileId}?alt=media&t=${Date.now()}`,
+      { headers:{'Authorization':'Bearer '+S.token,'Cache-Control':'no-cache'} }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if ((d.version||0) > S.lastVer) {
+        if (d.checks)    S.checks    = d.checks;
+        if (d.overrides) S.overrides = d.overrides;
+        if (d.extras)    S.extras    = d.extras;
+        S.lastVer = d.version;
+        buildStores(); saveS(); render();
+        toast('🔄 Lista actualizada desde el otro dispositivo');
+      }
+      syncSt = 'ok';
+    } else { syncSt = 'err'; }
+  } catch(e) { syncSt='err'; }
+  updateSyncUI();
+}
+
+function doSync()    { readFromD(); }
+function startPoll() {
+  clearInterval(pollTmr);
+  if (!S.fileId || !S.clientId) return;
+  pollTmr = setInterval(readFromD, 10000);
+}
+
+/* ── Sync UI ── */
+function updateSyncUI() {
+  const dot = document.getElementById('dot');
+  const lbl = document.getElementById('slbl');
+  if (!dot || !lbl) return;
+  dot.className = 'dot';
+  if (!S.fileId || !S.clientId) {
+    lbl.textContent = '⚙️ Toca para configurar Drive'; return;
+  }
+  if (syncSt==='ok') {
+    dot.classList.add('ok');
+    const ago = S.lastVer ? Math.round((Date.now()-S.lastVer)/1000) : null;
+    lbl.textContent = ago ? `Sync hace ${ago<60?ago+'s':Math.round(ago/60)+'min'} · cada 10s` : 'Conectado a Drive';
+  } else if (syncSt==='busy') {
+    dot.classList.add('spin'); lbl.textContent = 'Sincronizando…';
+  } else if (syncSt==='err') {
+    dot.classList.add('err'); lbl.textContent = '⚠️ Error — toca para diagnosticar';
+  } else {
+    lbl.textContent = '⚙️ Toca para configurar Drive';
+  }
+}
+setInterval(()=>{ if(syncSt==='ok') updateSyncUI(); }, 5000);
+
+function syncTap() {
+  if (!S.fileId || !S.clientId || syncSt==='err') openCfg();
+  else doSync();
+}
+
+/* ═══════════════════════════════════════════════════
+   PANEL DE CONFIGURACIÓN (sheet)
+═══════════════════════════════════════════════════ */
+function openCfg() {
+  renderCfg();
+  document.getElementById('cfg-overlay').style.display = 'flex';
+  document.getElementById('cfg-btn').classList.add('on');
+}
+function closeCfg() {
+  document.getElementById('cfg-overlay').style.display = 'none';
+  document.getElementById('cfg-btn').classList.remove('on');
+}
+
+function renderCfg() {
+  const hasClientId = !!S.clientId;
+  const hasFileId   = !!S.fileId;
+  const hasToken    = !!S.token && !tokenExpired();
+  const connected   = hasClientId && hasFileId && hasToken;
+
+  let statusHtml = '';
+  if (connected) {
+    statusHtml = `<div class="status-row ok"><span style="font-size:16px">🟢</span><div><b>Conexión activa</b><span>Token vigente · Sync automático cada 10 seg</span></div></div>`;
+  } else if (!hasClientId) {
+    statusHtml = `<div class="status-row fail"><span style="font-size:16px">❌</span><div><b>Falta el Client ID</b><span>Pega tu Client ID de Google Cloud Console.</span></div></div>`;
+  } else if (!hasFileId) {
+    statusHtml = `<div class="status-row fail"><span style="font-size:16px">❌</span><div><b>Falta el File ID</b><span>Sube super_estado.json a Drive y pega su ID.</span></div></div>`;
+  } else if (!hasToken) {
+    statusHtml = `<div class="status-row warn"><span style="font-size:16px">🔑</span><div><b>Token expirado o no obtenido</b><span>Toca "Iniciar sesión con Google".</span></div></div>`;
+  }
+
+  document.getElementById('cfg-sheet').innerHTML = `
+    <div class="sheet-title">⚙️ Configuración de Drive</div>
+    <div class="sheet-sub">Sincroniza la lista entre tus dispositivos en tiempo real.</div>
+
+    ${statusHtml}
+
+    <div class="cfg-section">1 · Client ID de Google Cloud</div>
+    <div class="field">
+      <div class="field-lbl">Client ID</div>
+      <input id="inp-cid" placeholder="123456-xxxx.apps.googleusercontent.com" value="${S.clientId}">
+      <div class="field-hint">Google Cloud Console → APIs → Credenciales → OAuth 2.0 → Aplicación web</div>
+    </div>
+
+    <div class="cfg-section">2 · Archivo de estado en Drive</div>
+    <div class="field">
+      <div class="field-lbl">File ID del super_estado.json</div>
+      <input id="inp-fid" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="${S.fileId}">
+      <div class="field-hint">URL de Drive: …/file/d/<b>ESTE_ES_EL_ID</b>/view</div>
+    </div>
+
+    <div class="cfg-section">3 · Autorizar</div>
+    <button class="btn-primary" onclick="saveCfgAndAuth()">
+      ${connected ? '↻ Renovar sesión de Google' : '🔑 Guardar y conectar con Google'}
+    </button>
+    ${connected?`<button class="btn-secondary" onclick="saveOnlyAndClose()">Guardar sin reconectar</button>`:''}
+    ${connected?`<button class="btn-secondary" style="color:var(--cm)" onclick="disconnect()">Desconectar cuenta</button>`:''}
+    <button class="btn-secondary" onclick="closeCfg()">Cancelar</button>
+
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5;font-weight:500">
+      💡 El Client ID lo obtienes <b>gratis</b> en console.cloud.google.com.<br>
+      Solo necesitas habilitarlo como "Aplicación web" con tu URL de GitHub Pages en los orígenes autorizados.
+    </div>
+  `;
+}
+
+function saveCfgAndAuth() {
+  const cid = document.getElementById('inp-cid').value.trim();
+  const fid = document.getElementById('inp-fid').value.trim();
+  if (cid) { S.clientId = cid; tokenClient = null; } // reset GIS si cambió
+  if (fid) S.fileId = fid;
+  saveS();
+  initGIS();
+  requestToken(true);   // abre popup de Google
+}
+
+function saveOnlyAndClose() {
+  const cid = document.getElementById('inp-cid').value.trim();
+  const fid = document.getElementById('inp-fid').value.trim();
+  if (cid) S.clientId = cid;
+  if (fid) S.fileId   = fid;
+  saveS(); closeCfg();
+  startPoll(); doSync();
+}
+
+function disconnect() {
+  if (!confirm('¿Desconectar la cuenta?')) return;
+  S.token = ''; S.tokenAt = 0;
+  clearInterval(pollTmr);
+  syncSt = 'off'; saveS(); closeCfg(); updateSyncUI();
+}
+
+/* ═══════════════════════════════════════════════════
+   AGREGAR ARTÍCULO
+═══════════════════════════════════════════════════ */
+let addStoreIdx = -1;
+
+function openAdd() {
+  document.getElementById('add-sheet').innerHTML = `
+    <div class="sheet-title">¿A qué tienda lo agregas?</div>
+    <div class="sheet-sub">Selecciona el grupo donde irá el nuevo artículo.</div>
+    ${STORES.map((s,i) => `
+      <div class="store-opt so${s.c}" onclick="selectAddStore(${i})">
+        <span class="so-emoji">${s.emoji}</span>
+        <div class="so-info">
+          <div class="so-name">${s.name}</div>
+          <div class="so-count">${s.items.length} artículos</div>
+        </div>
+        <span style="color:var(--text3);font-size:16px">›</span>
+      </div>`).join('')}
+    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>
+  `;
+  document.getElementById('add-overlay').style.display = 'flex';
+}
+
+function selectAddStore(i) {
+  addStoreIdx = i;
+  const s = STORES[i];
+  document.getElementById('add-sheet').innerHTML = `
+    <button class="back-btn" onclick="openAdd()">‹ Cambiar tienda</button>
+    <div class="store-badge sb${s.c}">${s.emoji} ${s.name}</div>
+    <div class="sheet-title">Nuevo artículo</div>
+    <div class="sheet-sub">Se añadirá al final de la lista de ${s.name}.</div>
+    <div class="field">
+      <div class="field-lbl">Nombre</div>
+      <input id="add-name" placeholder="Ej. Leche deslactosada…" maxlength="60" autocomplete="off"
+        onkeydown="if(event.key==='Enter')document.getElementById('add-qty').focus()">
+    </div>
+    <div class="form-2col">
+      <div class="field">
+        <div class="field-lbl">Piezas</div>
+        <input id="add-qty" type="number" inputmode="numeric" min="1" value="1"
+          onkeydown="if(event.key==='Enter')document.getElementById('add-price').focus()">
+      </div>
+      <div class="field">
+        <div class="field-lbl">Precio c/u ($)</div>
+        <input id="add-price" type="number" inputmode="numeric" min="0"
+          placeholder="${s.prices?'0':'Sin precio'}" ${s.prices?'':'disabled style="opacity:.45"'}
+          onkeydown="if(event.key==='Enter')confirmAdd()">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="confirmAdd()">＋ Agregar a ${s.name}</button>
+    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>
+  `;
+  setTimeout(()=>document.getElementById('add-name').focus(), 200);
+}
+
+function confirmAdd() {
+  const name  = document.getElementById('add-name').value.trim();
+  const qty   = Math.max(1, parseInt(document.getElementById('add-qty').value)||1);
+  const priceEl = document.getElementById('add-price');
+  const price = priceEl && !priceEl.disabled ? (parseInt(priceEl.value)||0) : null;
+  if (!name) {
+    document.getElementById('add-name').style.borderColor = 'var(--cm)';
+    setTimeout(()=>document.getElementById('add-name').style.borderColor='',1500);
+    return;
+  }
+  const si  = addStoreIdx;
+  const sid = STORES[si].id;
+  if (!S.extras[sid]) S.extras[sid] = [];
+  const item = { n:name, q:qty };
+  if (price !== null) item.p = price;
+  S.extras[sid].push(item);
+  buildStores(); saveS(); schedWrite();
+  closeAdd();
+  toast(`✓ "${name}" agregado`);
+  setTab(si);
+}
+
+function closeAdd() { document.getElementById('add-overlay').style.display='none'; }
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 2200);
+}
+
+/* ═══════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════ */
+loadS();
+render();
+updateSyncUI();
+
+// Tab por URL param (?tab=N)
+const tp = new URLSearchParams(location.search).get('tab');
+if (tp !== null) setTab(parseInt(tp,10));
+
+// Iniciar GIS si ya tenemos clientId
+if (S.clientId) {
+  // Esperar a que cargue la librería GIS
+  window.addEventListener('load', () => { initGIS(); });
+}
+
+// Iniciar polling si hay configuración completa
+if (S.clientId && S.fileId && S.token) {
+  startPoll();
+  setTimeout(doSync, 1000);
+} else {
+  syncSt = 'off'; updateSyncUI();
+}
+
+// Sync al volver a la app
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState==='visible' && S.fileId && S.token) doSync();
+});
+window.addEventListener('focus', ()=>{ if (S.fileId && S.token) doSync(); });
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
