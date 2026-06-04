@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limpiar caché — Lista del Súper</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #F4F2EE; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px; text-align: center; }
+  h1  { font-size: 22px; font-weight: 800; margin-bottom: 8px; color: #1C1B18; }
+  p   { font-size: 14px; color: #706D64; margin-bottom: 24px; line-height: 1.5; }
+  .btn { padding: 14px 28px; background: #138A68; color: #fff; border: none;
+    border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
+    font-family: inherit; margin-bottom: 12px; width: 100%; max-width: 300px; display: block; }
+  .btn:active { opacity: .85; }
+  .log { font-size: 12px; color: #138A68; margin-top: 16px; font-weight: 600; min-height: 24px; }
+  .err { color: #C94E2A; }
+</style>
+</head>
+<body>
+<h1>🧹 Limpiar caché</h1>
+<p>Esto borra el Service Worker y todos los archivos en caché del navegador,<br>
+   forzando que se descargue la versión más reciente de la app.</p>
+<button class="btn" onclick="clearAll()">Borrar caché y actualizar</button>
+<button class="btn" style="background:#706D64" onclick="location.href='./index.html'">Ir a la app sin limpiar</button>
+<div class="log" id="log">Listo para limpiar.</div>
+
+<script>
+async function clearAll() {
+  const log = document.getElementById('log');
+  log.className = 'log';
+  log.textContent = 'Limpiando…';
+  let steps = [];
+
+  // 1. Dar de baja todos los Service Workers
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      await reg.unregister();
+      steps.push('SW dado de baja');
+    }
+  }
+
+  // 2. Borrar todos los caches
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    for (const key of keys) {
+      await caches.delete(key);
+      steps.push(`Caché "${key}" borrado`);
+    }
+  }
+
+  // 3. Borrar localStorage si el usuario lo desea
+  // (no lo borramos automáticamente para no perder datos de la lista)
+
+  if (steps.length === 0) {
+    log.textContent = '✅ No había caché que limpiar.';
+  } else {
+    log.textContent = '✅ ' + steps.join(' · ') + '. Redirigiendo…';
+  }
+
+  // 4. Redirigir al index con cache-bust
+  setTimeout(() => {
+    location.href = './index.html?v=' + Date.now();
+  }, 1500);
+}
+
+// Auto-ejecutar si viene con ?auto=1
+if (new URLSearchParams(location.search).get('auto') === '1') clearAll();
+</script>
+</body>
+</html>
