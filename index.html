@@ -538,8 +538,14 @@ function initGIS() {
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: S.clientId,
     scope: 'https://www.googleapis.com/auth/drive.file',
+    // NO pre-seleccionar cuenta — forzar que el usuario elija siempre
+    prompt: 'select_account',
     callback: (resp) => {
-      if (resp.error) { toast('❌ Error: ' + resp.error); return; }
+      if (resp.error) {
+        toast('❌ Error: ' + resp.error);
+        syncSt = 'err'; updateSyncUI();
+        return;
+      }
       S.token   = resp.access_token;
       S.tokenAt = Date.now();
       saveS();
@@ -553,14 +559,12 @@ function initGIS() {
   });
 }
 
-function requestToken(prompt=true) {
-  if (!tokenClient) { initGIS(); }
+function requestToken(forceSelect = true) {
+  if (!tokenClient) initGIS();
   if (!tokenClient) { toast('⚠️ Pon tu Client ID primero'); openCfg(); return; }
-  if (prompt) {
-    tokenClient.requestAccessToken({ prompt: 'consent' });
-  } else {
-    tokenClient.requestAccessToken({ prompt: '' });
-  }
+  // forceSelect=true → siempre muestra el selector de cuenta
+  // forceSelect=false → renovación silenciosa en segundo plano
+  tokenClient.requestAccessToken({ prompt: forceSelect ? 'select_account' : '' });
 }
 
 function tokenExpired() {
@@ -578,11 +582,21 @@ async function ensureToken() {
     const orig = tokenClient.callback;
     tokenClient.callback = (resp) => {
       tokenClient.callback = orig;
-      if (resp.error) { resolve(false); return; }
+      if (resp.error) {
+        // Renovación silenciosa falló — pedir al usuario que reconecte
+        syncSt = 'err';
+        const lbl = document.getElementById('slbl');
+        if (lbl) lbl.textContent = '⚠️ Sesión expirada — toca ⚙️ para reconectar';
+        updateSyncUI();
+        resolve(false);
+        return;
+      }
       S.token   = resp.access_token;
       S.tokenAt = Date.now();
-      saveS(); resolve(true);
+      saveS();
+      resolve(true);
     };
+    // Renovación silenciosa — sin selector de cuenta
     tokenClient.requestAccessToken({ prompt: '' });
   });
 }
@@ -724,16 +738,22 @@ function renderCfg() {
     </div>
 
     <div class="cfg-section">3 · Autorizar</div>
+    <div style="font-size:12px;color:var(--text2);background:var(--ax);border-radius:var(--radx);padding:9px 11px;margin-bottom:10px;font-weight:500;line-height:1.5">
+      ⚠️ <b>Importante:</b> cuando aparezca el selector de cuentas de Google,
+      elige la cuenta <b>que tiene el archivo super_estado.json en Drive</b>
+      y que agregaste como usuario de prueba en Google Cloud Console.
+    </div>
     <button class="btn-primary" onclick="saveCfgAndAuth()">
-      ${connected ? '↻ Renovar sesión de Google' : '🔑 Guardar y conectar con Google'}
+      ${connected ? '↻ Reconectar con Google (elige la cuenta correcta)' : '🔑 Guardar y conectar con Google'}
     </button>
     ${connected?`<button class="btn-secondary" onclick="saveOnlyAndClose()">Guardar sin reconectar</button>`:''}
     ${connected?`<button class="btn-secondary" style="color:var(--cm)" onclick="disconnect()">Desconectar cuenta</button>`:''}
     <button class="btn-secondary" onclick="closeCfg()">Cancelar</button>
 
-    <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5;font-weight:500">
-      💡 El Client ID lo obtienes <b>gratis</b> en console.cloud.google.com.<br>
-      Solo necesitas habilitarlo como "Aplicación web" con tu URL de GitHub Pages en los orígenes autorizados.
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6;font-weight:500">
+      💡 Si ves <b>"acceso bloqueado"</b>, ve a Google Cloud Console →
+      Pantalla de consentimiento OAuth → Usuarios de prueba →
+      agrega el correo de <b>cada celular</b> que vaya a usar la app.
     </div>
   `;
 }
@@ -741,11 +761,17 @@ function renderCfg() {
 function saveCfgAndAuth() {
   const cid = document.getElementById('inp-cid').value.trim();
   const fid = document.getElementById('inp-fid').value.trim();
-  if (cid) { S.clientId = cid; tokenClient = null; } // reset GIS si cambió
+  if (!cid) { toast('⚠️ El Client ID es obligatorio'); return; }
+  if (!fid) { toast('⚠️ El File ID es obligatorio'); return; }
+  if (cid) { S.clientId = cid; tokenClient = null; } // reset GIS si cambió clientId
   if (fid) S.fileId = fid;
+  // Limpiar token anterior para forzar nueva autenticación
+  S.token   = '';
+  S.tokenAt = 0;
   saveS();
   initGIS();
-  requestToken(true);   // abre popup de Google
+  // Siempre mostrar selector de cuenta para evitar cuenta equivocada
+  requestToken(true);
 }
 
 function saveOnlyAndClose() {
