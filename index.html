@@ -14,10 +14,7 @@
 <title>Lista del Súper</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<!-- Google Identity Services — maneja OAuth sin backend ni CORS -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -30,7 +27,7 @@
   --p:#4840A8;--pm:#7068CC;--pl:#E8E6FC;--px:#F3F2FE;
   --rad:14px;--rads:9px;--radx:6px;
   --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
-  --shm:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --shm:0 4px 16px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
 }
 body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;max-width:430px;margin:0 auto;-webkit-font-smoothing:antialiased}
 
@@ -48,19 +45,25 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .sync-bar{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radx);font-size:11.5px;cursor:pointer}
 .sync-bar:active{background:var(--border)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}
-.dot.ok{background:#22C78B}
-.dot.spin{background:var(--am);animation:blink 1s infinite}
-.dot.err{background:var(--cm)}
+.dot.ok{background:#22C78B}.dot.spin{background:var(--am);animation:blink 1s infinite}.dot.err{background:var(--cm)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .sync-lbl{flex:1;color:var(--text2);font-weight:500}
 .sync-btn{font-size:11px;font-weight:800;color:var(--tm);background:none;border:none;cursor:pointer;padding:2px 4px}
+
+/* ── TOTAL FIJO (sticky bajo las tabs) ── */
+.total-sticky{position:sticky;top:0;z-index:90;padding:8px 12px 0;background:var(--bg)}
+.total-banner{background:var(--text);color:#fff;border-radius:var(--rad);padding:11px 15px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shm)}
+.total-banner .lbl{font-size:10px;font-weight:700;opacity:.55;text-transform:uppercase;letter-spacing:.5px}
+.total-banner .amt{font-size:22px;font-weight:800;letter-spacing:-1px;margin-top:1px}
+.total-banner .right{text-align:right}
+.total-banner .pct{font-size:15px;font-weight:800}
 
 /* ── Edit banner ── */
 .edit-ban{background:var(--tx);border-bottom:1px solid var(--tl);padding:7px 14px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--t)}
 .edit-ban span{flex:1}
 
 /* ── Tabs ── */
-.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 12px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 12px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;position:sticky;top:94px;z-index:95}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid transparent;cursor:pointer;background:transparent;white-space:nowrap;transition:all .15s}
 .tab.all{color:var(--text2);border-color:var(--border)}.tab.all.on{background:var(--text);color:#fff;border-color:var(--text)}
@@ -70,11 +73,7 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .tab.t3{color:var(--p);border-color:var(--pl)}.tab.t3.on{background:var(--pm);color:#fff;border-color:var(--pm)}
 
 /* ── Content ── */
-.content{padding:12px 12px 90px}
-.total-banner{background:var(--text);color:#fff;border-radius:var(--rad);padding:13px 15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;box-shadow:var(--shm)}
-.total-banner .lbl{font-size:10.5px;font-weight:700;opacity:.55;text-transform:uppercase;letter-spacing:.5px}
-.total-banner .amt{font-size:24px;font-weight:800;letter-spacing:-1px;margin-top:2px}
-.total-banner .pct{font-size:16px;font-weight:800;text-align:right}
+.content{padding:10px 12px 100px}
 
 /* ── Store card ── */
 .card{background:var(--surface);border-radius:var(--rad);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh);animation:fadeUp .2s ease both}
@@ -110,10 +109,10 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .item-qty{font-size:11px;color:var(--text2);margin-top:1px;font-weight:500}
 .item-price{font-size:12px;font-weight:700;color:var(--text3);flex-shrink:0}
 
-/* ── Item row edit ── */
-.item-edit{display:flex;align-items:center;gap:7px;padding:7px 13px;border-bottom:1px solid var(--border)}
+/* ── Item row EDIT (con mover + eliminar) ── */
+.item-edit{display:flex;align-items:center;gap:6px;padding:6px 10px 6px 13px;border-bottom:1px solid var(--border);background:var(--surface)}
 .item-edit:last-child{border-bottom:none}
-.item-edit-name{font-size:12.5px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-edit-name{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
 .edit-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;text-align:center;margin-bottom:2px}
 .stepper{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:7px;overflow:hidden;flex-shrink:0}
 .stbtn{width:26px;height:26px;border:none;background:var(--surface2);font-size:15px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:background .1s}
@@ -123,6 +122,13 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .price-inp-wrap:focus-within{border-color:var(--tm);background:var(--surface)}
 .price-inp-wrap span{font-size:11px;color:var(--text3);font-weight:700}
 .price-inp{width:40px;border:none;background:transparent;font-size:12px;font-weight:800;color:var(--text);font-family:inherit;outline:none;text-align:right}
+/* Botones de mover y eliminar */
+.move-btns{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.move-btn{width:22px;height:20px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:background .1s}
+.move-btn:active{background:var(--border)}
+.move-btn:disabled{opacity:.25;cursor:default}
+.del-btn{width:26px;height:26px;border:none;border-radius:6px;background:var(--cx);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .1s}
+.del-btn:active{background:var(--cm);color:#fff}
 
 /* ── Subtotal ── */
 .subtotal{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--surface2);border-top:1px solid var(--border)}
@@ -131,10 +137,10 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .sv0{color:var(--t)}.sv1{color:var(--a)}.sv2{color:var(--c)}.sv3{color:var(--p)}
 
 /* ── FAB ── */
-.fab{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tm);color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 4px 16px rgba(19,138,104,.45);z-index:150;white-space:nowrap;transition:transform .15s,box-shadow .15s}
+.fab{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tm);color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 4px 16px rgba(19,138,104,.45);z-index:150;white-space:nowrap;transition:transform .15s}
 .fab:active{transform:translateX(-50%) scale(.95)}
 
-/* ── Overlays generales ── */
+/* ── Overlays ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:200;animation:fadeIn .2s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .sheet{background:var(--surface);border-radius:var(--rad) var(--rad) 0 0;padding:20px 18px 32px;width:100%;max-width:430px;animation:slideUp .22s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto}
@@ -142,7 +148,7 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .sheet-title{font-size:15px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
 .sheet-sub{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:16px;line-height:1.5}
 
-/* ── Panel Drive (sheet) ── */
+/* ── Panel Drive ── */
 .cfg-section{font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .cfg-section:first-of-type{margin-top:0}
 .field{margin-bottom:9px}
@@ -153,7 +159,6 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .field-hint{font-size:11px;color:var(--text3);margin-top:3px;font-weight:500;line-height:1.4}
 .btn-primary{width:100%;padding:11px;background:var(--tm);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;transition:opacity .15s;margin-bottom:7px}
 .btn-primary:active{opacity:.85}
-.btn-primary.amber{background:var(--am)}
 .btn-secondary{width:100%;padding:10px;background:none;border:1.5px solid var(--border);border-radius:var(--rads);font-size:13px;font-weight:700;color:var(--text2);font-family:inherit;cursor:pointer;margin-bottom:7px}
 .btn-secondary:active{background:var(--bg)}
 .status-row{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:var(--radx);margin-bottom:10px;font-size:12.5px}
@@ -161,7 +166,7 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 .status-row b{display:block;font-weight:800;margin-bottom:2px}
 .status-row span{color:var(--text2);font-size:11.5px;line-height:1.4}
 
-/* ── Add-item sheet ── */
+/* ── Add sheet ── */
 .store-opt{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:var(--rads);border:1.5px solid var(--border);cursor:pointer;margin-bottom:8px;transition:all .15s}
 .store-opt:active{opacity:.8}
 .so0:active,.so0.sel{background:var(--tx);border-color:var(--tm)}
@@ -184,15 +189,11 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 </head>
 <body>
 
-<!-- ── HEADER ── -->
 <header class="hdr">
   <div class="hdr-top">
     <div class="brand">
       <div class="brand-ico">🛒</div>
-      <div>
-        <h1>Lista del Súper</h1>
-        <p id="gstats">Cargando…</p>
-      </div>
+      <div><h1>Lista del Súper</h1><p id="gstats">Cargando…</p></div>
     </div>
     <div class="hdr-btns">
       <button class="ico-btn" id="edit-btn" onclick="toggleEdit()" title="Editar">✏️</button>
@@ -207,11 +208,24 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 </header>
 
 <div id="edit-banner" class="edit-ban" style="display:none">
-  <span>✏️ Modo edición activo</span>
+  <span>✏️ Modo edición — mueve, edita o elimina artículos</span>
   <button onclick="toggleEdit()" style="background:none;border:none;font-size:12px;font-weight:800;color:var(--t);cursor:pointer">Listo ✓</button>
 </div>
 
-<!-- ── TABS ── -->
+<!-- TOTAL SIEMPRE VISIBLE (sticky) -->
+<div class="total-sticky">
+  <div class="total-banner">
+    <div>
+      <div class="lbl">Total en carrito</div>
+      <div class="amt" id="gtotal">$0</div>
+    </div>
+    <div class="right">
+      <div class="lbl">Completado</div>
+      <div class="pct" id="gpct">0%</div>
+    </div>
+  </div>
+</div>
+
 <nav class="tabs">
   <button class="tab all on" onclick="setTab(-1)">Todas</button>
   <button class="tab t0"     onclick="setTab(0)">🏪 Walmart</button>
@@ -221,27 +235,20 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--
 </nav>
 
 <main class="content" id="content"></main>
-
-<!-- FAB -->
 <button class="fab" onclick="openAdd()">＋ Agregar artículo</button>
 
-<!-- OVERLAY: Configuración Drive -->
 <div class="overlay" id="cfg-overlay" style="display:none" onclick="if(event.target===this)closeCfg()">
   <div class="sheet" id="cfg-sheet"></div>
 </div>
-
-<!-- OVERLAY: Agregar artículo paso 1 — elegir tienda -->
 <div class="overlay" id="add-overlay" style="display:none" onclick="if(event.target===this)closeAdd()">
   <div class="sheet" id="add-sheet"></div>
 </div>
-
-<!-- Toast container -->
 <div id="toasts"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   DATOS BASE (del Excel Super.xlsx)
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   DATOS BASE
+══════════════════════════════════════════════ */
 const BASE = [
   { id:'walmart', name:'Walmart', emoji:'🏪', c:0, prices:true, items:[
     {n:'Pan Higos',q:1,p:50},{n:'Huevo',q:2,p:80},{n:'Chorizo',q:2,p:35},
@@ -285,58 +292,53 @@ const BASE = [
   ]}
 ];
 
-/* ═══════════════════════════════════════════════════
-   ESTADO — una sola fuente de verdad en localStorage
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════════ */
 const LS_KEY = 'superLista_v5';
-let S = {                    // S = state global
-  checks:   {},              // { "walmart_3": true }
-  overrides:{},              // { "walmart_3": {q:2,p:95} }
-  extras:   {},              // { "walmart": [{n,q,p}] }
-  fileId:   '',              // Google Drive File ID
-  clientId: '',              // OAuth Client ID (para GIS)
-  token:    '',              // access_token vigente
-  tokenAt:  0,              // timestamp cuando se obtuvo
-  lastVer:  0               // version del JSON en Drive
+let S = {
+  checks:{}, overrides:{},
+  // extras[sid] = array de {n,q,p} — artículos personalizados en ORDEN
+  extras:{},
+  fileId:'', clientId:'',
+  token:'', tokenAt:0, lastVer:0
 };
-let STORES = [];             // copia con overrides+extras aplicados
-let tab     = -1;
-let editMode= false;
-let syncSt  = 'off';         // 'off' | 'ok' | 'busy' | 'err'
-let pollTmr = null;
-let writeTmr= null;
+let STORES=[], tab=-1, editMode=false;
+let syncSt='off', pollTmr=null, writeTmr=null;
 
-/* ── Cargar / Guardar ── */
 function loadS() {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) S = { ...S, ...JSON.parse(raw) };
-    // Migración: importar versiones anteriores si no hay v5
-    if (!raw) {
+    if (raw) S = {...S, ...JSON.parse(raw)};
+    else {
+      // migración versiones anteriores
       for (const k of ['superLista_v4','superLista_v3','superLista_v2']) {
         const old = localStorage.getItem(k);
-        if (old) {
-          try {
-            const o = JSON.parse(old);
-            if (o.checks)    S.checks    = o.checks;
-            if (o.overrides) S.overrides = o.overrides;
-            if (o.driveFileId) S.fileId  = o.driveFileId;
-            if (o.driveToken)  S.token   = o.driveToken;
-            if (o.oauthClientId) S.clientId = o.oauthClientId;
-            if (o.customItems) S.extras  = o.customItems;
-          } catch(e) {}
-          break;
-        }
+        if (!old) continue;
+        try {
+          const o = JSON.parse(old);
+          if (o.checks)       S.checks    = o.checks;
+          if (o.overrides)    S.overrides = o.overrides;
+          if (o.driveFileId)  S.fileId    = o.driveFileId;
+          if (o.oauthClientId)S.clientId  = o.oauthClientId;
+          if (o.extras||o.customItems) S.extras = o.extras||o.customItems;
+        } catch(e){}
+        break;
       }
     }
-  } catch(e) {}
+  } catch(e){}
   buildStores();
 }
 function saveS() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e){}
 }
 
-/* ── Construir STORES con overrides y extras ── */
+/* ══════════════════════════════════════════════
+   BUILD STORES
+   extras[sid] guarda los ítems extra con su orden actual.
+   overrides[sid_i] guarda ediciones de q/p para ítems base.
+   Para ítems extra, las ediciones se guardan directo en el array.
+══════════════════════════════════════════════ */
 function buildStores() {
   STORES = BASE.map(b => {
     const extraItems = S.extras[b.id] || [];
@@ -344,116 +346,258 @@ function buildStores() {
     return {
       ...b,
       items: allItems.map((item, i) => {
-        const ov = S.overrides[b.id+'_'+i] || {};
-        return { n: item.n, q: ov.q ?? item.q, p: ov.p ?? item.p };
+        // Solo aplicar overrides a ítems base (índice < b.items.length)
+        if (i < b.items.length) {
+          const ov = S.overrides[b.id+'_'+i] || {};
+          return { n:item.n, q:ov.q??item.q, p:ov.p??item.p, base:true };
+        }
+        // Ítems extra — sus propiedades ya están actualizadas en S.extras
+        return { ...item, base:false };
       })
     };
   });
 }
 
-/* ═══════════════════════════════════════════════════
-   CHECKS / EDICIÓN
-═══════════════════════════════════════════════════ */
-function ck(sid, i) { return !!S.checks[sid+'_'+i]; }
+/* ══════════════════════════════════════════════
+   CHECKS
+══════════════════════════════════════════════ */
+function ck(sid,i){ return !!S.checks[sid+'_'+i]; }
 
-function toggle(sid, i) {
-  if (editMode) return;
+function toggle(sid,i){
+  if(editMode) return;
   S.checks[sid+'_'+i] = !S.checks[sid+'_'+i];
   saveS(); render(); schedWrite();
 }
 
-function resetStore(sid) {
-  Object.keys(S.checks).forEach(k => { if (k.startsWith(sid+'_')) delete S.checks[k]; });
+function resetStore(sid){
+  Object.keys(S.checks).forEach(k=>{ if(k.startsWith(sid+'_')) delete S.checks[k]; });
   saveS(); render(); schedWrite();
 }
 
-function setQty(sid, i, delta) {
-  const key = sid+'_'+i;
-  const cur  = STORES.find(s=>s.id===sid).items[i].q;
-  const next = Math.max(1, cur + delta);
-  if (next === cur) return;
-  if (!S.overrides[key]) S.overrides[key] = {};
-  S.overrides[key].q = next;
+/* ══════════════════════════════════════════════
+   EDICIÓN — cantidad y precio
+══════════════════════════════════════════════ */
+function setQty(sid,i,delta){
+  const store = STORES.find(s=>s.id===sid);
+  const cur   = store.items[i].q;
+  const next  = Math.max(1, cur+delta);
+  if (next===cur) return;
+  const baseLen = BASE.find(b=>b.id===sid).items.length;
+  if (i < baseLen) {
+    // ítem base → usar overrides
+    const key = sid+'_'+i;
+    if (!S.overrides[key]) S.overrides[key]={};
+    S.overrides[key].q = next;
+  } else {
+    // ítem extra → editar directo en extras
+    const ei = i - baseLen;
+    if (!S.extras[sid]) S.extras[sid]=[];
+    S.extras[sid][ei].q = next;
+  }
   buildStores(); saveS(); schedWrite();
   const el = document.getElementById('qv_'+sid+'_'+i);
-  if (el) el.textContent = next;
-  updateSubtotals();
+  if(el) el.textContent = next;
+  updateTotals();
 }
 
-function setPrice(sid, i, val) {
-  const v = parseInt(val, 10);
-  if (isNaN(v) || v < 0) return;
-  const key = sid+'_'+i;
-  if (!S.overrides[key]) S.overrides[key] = {};
-  S.overrides[key].p = v;
+function setPrice(sid,i,val){
+  const v = parseInt(val,10);
+  if(isNaN(v)||v<0) return;
+  const baseLen = BASE.find(b=>b.id===sid).items.length;
+  if (i < baseLen) {
+    const key = sid+'_'+i;
+    if(!S.overrides[key]) S.overrides[key]={};
+    S.overrides[key].p = v;
+  } else {
+    const ei = i - baseLen;
+    if(!S.extras[sid]) S.extras[sid]=[];
+    S.extras[sid][ei].p = v;
+  }
   buildStores(); saveS(); schedWrite();
-  updateSubtotals();
+  updateTotals();
 }
 
-/* ═══════════════════════════════════════════════════
-   STATS
-═══════════════════════════════════════════════════ */
-function storeStats(si) {
-  const s = STORES[si], n = s.items.length;
-  const done = s.items.filter((_,i) => ck(s.id,i)).length;
-  return { n, done, pct: n ? Math.round(done/n*100) : 0 };
-}
-function subtotal(si) {
-  const s = STORES[si];
-  if (!s.prices) return null;
-  return s.items.reduce((sum,item,i) => ck(s.id,i) ? sum + item.q*(item.p||0) : sum, 0);
-}
-function grandTotal() {
-  return STORES.reduce((sum,_,i)=>{ const sub=subtotal(i); return sub!=null?sum+sub:sum; },0);
-}
-function globalDone()  { return STORES.reduce((s,_,i)=>s+storeStats(i).done,0); }
-function globalTotal() { return STORES.reduce((s,b)=>s+b.items.length,0); }
+/* ══════════════════════════════════════════════
+   MOVER ARTÍCULO (arriba / abajo)
+   Solo funciona en ítems extra (los de BASE no se mueven).
+   Para ítems base, se mueven creando una copia en extras
+   y marcando el original como "oculto".
+══════════════════════════════════════════════ */
+function moveItem(sid, i, dir) {
+  const store   = STORES.find(s=>s.id===sid);
+  const total   = store.items.length;
+  const newIdx  = i + dir;
+  if (newIdx < 0 || newIdx >= total) return;
 
-/* ── Actualizar subtotales sin re-render completo ── */
-function updateSubtotals() {
-  STORES.forEach((s,i) => {
-    const sub = subtotal(i);
-    const el  = document.getElementById('sub_'+s.id);
-    if (el && sub!==null) el.textContent = '$'+sub.toLocaleString('es-MX');
-    const st  = storeStats(i);
-    const el2 = document.getElementById('csub_'+s.id);
-    if (el2) el2.textContent = `${st.done}/${st.n} marcados${sub!=null?' · $'+sub.toLocaleString('es-MX'):''}`;
+  // Construir lista completa de ítems del store como objetos editables
+  // (combina BASE con overrides + extras en el orden actual)
+  const fullList = store.items.map((item, idx) => ({
+    n: item.n, q: item.q, p: item.p,
+    checked: !!S.checks[sid+'_'+idx]
+  }));
+
+  // Swap
+  [fullList[i], fullList[newIdx]] = [fullList[newIdx], fullList[i]];
+
+  // Guardar toda la lista reordenada como extras (reemplaza base + extras)
+  // y limpiar overrides/checks del store
+  S.extras[sid] = fullList.map(item => {
+    const obj = { n:item.n, q:item.q };
+    if (item.p !== undefined) obj.p = item.p;
+    return obj;
   });
-  const gt = grandTotal();
-  const el = document.getElementById('gtotal');
-  if (el) el.textContent = '$'+gt.toLocaleString('es-MX');
-  const gs = document.getElementById('gstats');
-  if (gs) gs.textContent = `${globalDone()}/${globalTotal()} artículos`;
+
+  // Reconstruir checks con nuevos índices
+  const newChecks = {};
+  Object.keys(S.checks).forEach(k => {
+    if (!k.startsWith(sid+'_')) newChecks[k] = S.checks[k];
+  });
+  fullList.forEach((item, idx) => {
+    if (item.checked) newChecks[sid+'_'+idx] = true;
+  });
+  S.checks = newChecks;
+
+  // Limpiar overrides del store (ya están integrados en extras)
+  Object.keys(S.overrides).forEach(k => {
+    if (k.startsWith(sid+'_')) delete S.overrides[k];
+  });
+
+  // Vaciar items base del store para que buildStores use solo extras
+  // Hacemos esto marcando en BASE que este store ya tiene orden personalizado
+  if (!S.customOrder) S.customOrder = {};
+  S.customOrder[sid] = true;
+
+  buildStores(); saveS(); schedWrite(); render();
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════
+   ELIMINAR ARTÍCULO
+══════════════════════════════════════════════ */
+function deleteItem(sid, i) {
+  const store   = STORES.find(s=>s.id===sid);
+  const total   = store.items.length;
+
+  // Construir lista sin el ítem eliminado
+  const fullList = store.items
+    .map((item, idx) => ({
+      n:item.n, q:item.q, p:item.p,
+      checked: !!S.checks[sid+'_'+idx]
+    }))
+    .filter((_,idx) => idx !== i);
+
+  // Guardar como extras con orden personalizado
+  S.extras[sid] = fullList.map(item => {
+    const obj = { n:item.n, q:item.q };
+    if (item.p !== undefined) obj.p = item.p;
+    return obj;
+  });
+
+  // Reconstruir checks
+  const newChecks = {};
+  Object.keys(S.checks).forEach(k => {
+    if (!k.startsWith(sid+'_')) newChecks[k] = S.checks[k];
+  });
+  fullList.forEach((item, idx) => {
+    if (item.checked) newChecks[sid+'_'+idx] = true;
+  });
+  S.checks = newChecks;
+
+  // Limpiar overrides del store
+  Object.keys(S.overrides).forEach(k => {
+    if (k.startsWith(sid+'_')) delete S.overrides[k];
+  });
+
+  if (!S.customOrder) S.customOrder = {};
+  S.customOrder[sid] = true;
+
+  buildStores(); saveS(); schedWrite(); render();
+  toast('🗑️ Artículo eliminado');
+}
+
+/* buildStores actualizado para respetar orden personalizado */
+function buildStores() {
+  STORES = BASE.map(b => {
+    const hasCustom = S.customOrder && S.customOrder[b.id];
+    let allItems;
+    if (hasCustom) {
+      // Orden personalizado: usar solo extras (ya contiene todo el store reordenado)
+      allItems = S.extras[b.id] || [];
+    } else {
+      // Orden base + extras al final
+      const extraItems = S.extras[b.id] || [];
+      allItems = [...b.items, ...extraItems];
+    }
+    return {
+      ...b,
+      items: allItems.map((item, i) => {
+        if (!hasCustom && i < b.items.length) {
+          const ov = S.overrides[b.id+'_'+i] || {};
+          return { n:item.n, q:ov.q??item.q, p:ov.p??item.p };
+        }
+        return { n:item.n, q:item.q, p:item.p };
+      })
+    };
+  });
+}
+
+/* ══════════════════════════════════════════════
+   STATS + TOTALS
+══════════════════════════════════════════════ */
+function storeStats(si){
+  const s=STORES[si], n=s.items.length;
+  const done=s.items.filter((_,i)=>ck(s.id,i)).length;
+  return {n,done,pct:n?Math.round(done/n*100):0};
+}
+function subtotal(si){
+  const s=STORES[si];
+  if(!s.prices) return null;
+  return s.items.reduce((sum,item,i)=>ck(s.id,i)?sum+item.q*(item.p||0):sum,0);
+}
+function grandTotal(){ return STORES.reduce((sum,_,i)=>{const sub=subtotal(i);return sub!=null?sum+sub:sum;},0); }
+function globalDone() { return STORES.reduce((s,_,i)=>s+storeStats(i).done,0); }
+function globalTotal(){ return STORES.reduce((s,b)=>s+b.items.length,0); }
+
+function updateTotals(){
+  const done=globalDone(), total=globalTotal(), gt=grandTotal();
+  // Total sticky
+  const ge=document.getElementById('gtotal'); if(ge) ge.textContent='$'+gt.toLocaleString('es-MX');
+  const gp=document.getElementById('gpct');   if(gp) gp.textContent=(total?Math.round(done/total*100):0)+'%';
+  const gs=document.getElementById('gstats'); if(gs) gs.textContent=`${done}/${total} artículos`;
+  // Subtotales por tienda
+  STORES.forEach((s,i)=>{
+    const sub=subtotal(i);
+    const el=document.getElementById('sub_'+s.id); if(el&&sub!==null) el.textContent='$'+sub.toLocaleString('es-MX');
+    const st=storeStats(i);
+    const el2=document.getElementById('csub_'+s.id);
+    if(el2) el2.textContent=`${st.done}/${st.n} marcados${sub!=null?' · $'+sub.toLocaleString('es-MX'):''}`;
+  });
+}
+
+/* ══════════════════════════════════════════════
    TABS / EDIT
-═══════════════════════════════════════════════════ */
-function setTab(t) {
-  tab = t;
-  document.querySelectorAll('.tab').forEach((el,i) => {
-    el.classList.toggle('on', [-1,0,1,2,3][i] === t);
-  });
+══════════════════════════════════════════════ */
+function setTab(t){
+  tab=t;
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',[-1,0,1,2,3][i]===t));
+  render();
+}
+function toggleEdit(){
+  editMode=!editMode;
+  document.getElementById('edit-btn').classList.toggle('on',editMode);
+  document.getElementById('edit-banner').style.display=editMode?'flex':'none';
   render();
 }
 
-function toggleEdit() {
-  editMode = !editMode;
-  document.getElementById('edit-btn').classList.toggle('on', editMode);
-  document.getElementById('edit-banner').style.display = editMode ? 'flex' : 'none';
-  render();
-}
-
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    RENDER
-═══════════════════════════════════════════════════ */
-const CHK_SVG = `<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+══════════════════════════════════════════════ */
+const CHK=`<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-function renderItemNormal(s, item, i) {
-  const on = ck(s.id, i);
-  const total = s.prices ? item.q*(item.p||0) : null;
+function renderItemNormal(s,item,i){
+  const on=ck(s.id,i);
+  const total=s.prices?item.q*(item.p||0):null;
   return `<div class="item${on?' done':''}" onclick="toggle('${s.id}',${i})">
-    <div class="cb${on?' on'+s.c:''}">${on?CHK_SVG:''}</div>
+    <div class="cb${on?' on'+s.c:''}">${on?CHK:''}</div>
     <div class="item-info">
       <div class="item-name">${item.n}</div>
       <div class="item-qty">${item.q} ${item.q>1?'pzas':'pza'}${item.p?' · $'+item.p+' c/u':''}</div>
@@ -462,9 +606,16 @@ function renderItemNormal(s, item, i) {
   </div>`;
 }
 
-function renderItemEdit(s, item, i) {
+function renderItemEdit(s,item,i,totalItems){
+  const isFirst=i===0, isLast=i===totalItems-1;
   return `<div class="item-edit">
+    <!-- Botones mover -->
+    <div class="move-btns">
+      <button class="move-btn" onclick="moveItem('${s.id}',${i},-1)" ${isFirst?'disabled':''} title="Subir">▲</button>
+      <button class="move-btn" onclick="moveItem('${s.id}',${i},+1)" ${isLast?'disabled':''} title="Bajar">▼</button>
+    </div>
     <div class="item-edit-name">${item.n}</div>
+    <!-- Piezas -->
     <div>
       <div class="edit-lbl">Pzas</div>
       <div class="stepper">
@@ -473,22 +624,21 @@ function renderItemEdit(s, item, i) {
         <button class="stbtn" onclick="setQty('${s.id}',${i},+1)">+</button>
       </div>
     </div>
+    <!-- Precio -->
     ${s.prices?`<div>
       <div class="edit-lbl">Precio</div>
       <div class="price-inp-wrap"><span>$</span>
         <input class="price-inp" type="number" inputmode="numeric" min="0"
-          value="${item.p||0}"
-          oninput="setPrice('${s.id}',${i},this.value)">
+          value="${item.p||0}" oninput="setPrice('${s.id}',${i},this.value)">
       </div>
     </div>`:''}
+    <!-- Eliminar -->
+    <button class="del-btn" onclick="deleteItem('${s.id}',${i})" title="Eliminar">🗑</button>
   </div>`;
 }
 
-function renderCard(si) {
-  const s   = STORES[si];
-  const st  = storeStats(si);
-  const sub = subtotal(si);
-  const c   = s.c;
+function renderCard(si){
+  const s=STORES[si], st=storeStats(si), sub=subtotal(si), c=s.c;
   return `<div class="card">
     <div class="card-head ch${c}">
       <div style="flex:1;min-width:0">
@@ -501,7 +651,7 @@ function renderCard(si) {
       <div class="prog"><div class="prog-fill pf${c}" style="width:${st.pct}%"></div></div>
       <div class="prog-pct">${st.pct}%</div>
     </div>
-    <div>${s.items.map((item,i) => editMode?renderItemEdit(s,item,i):renderItemNormal(s,item,i)).join('')}</div>
+    <div>${s.items.map((item,i)=>editMode?renderItemEdit(s,item,i,s.items.length):renderItemNormal(s,item,i)).join('')}</div>
     ${sub!=null?`<div class="subtotal">
       <span class="sub-lbl">Subtotal marcado</span>
       <span class="sub-val sv${c}" id="sub_${s.id}">$${sub.toLocaleString('es-MX')}</span>
@@ -509,314 +659,248 @@ function renderCard(si) {
   </div>`;
 }
 
-function render() {
-  const done=globalDone(), total=globalTotal(), gt=grandTotal();
-  document.getElementById('gstats').textContent = `${done}/${total} artículos`;
-  let html = '';
-  if (tab === -1) {
-    html += `<div class="total-banner">
-      <div><div class="lbl">Total en carrito</div><div class="amt" id="gtotal">$${gt.toLocaleString('es-MX')}</div></div>
-      <div><div class="lbl" style="text-align:right">Completado</div><div class="pct">${total?Math.round(done/total*100):0}%</div></div>
-    </div>`;
-    html += STORES.map((_,i)=>renderCard(i)).join('');
-  } else {
-    html += renderCard(tab);
-  }
-  document.getElementById('content').innerHTML = html;
+function render(){
+  let html='';
+  if(tab===-1) html=STORES.map((_,i)=>renderCard(i)).join('');
+  else         html=renderCard(tab);
+  document.getElementById('content').innerHTML=html;
+  updateTotals();
   updateSyncUI();
 }
 
-/* ═══════════════════════════════════════════════════
-   GOOGLE IDENTITY SERVICES — OAuth sin backend
-   Funciona en cualquier origen HTTPS. El token dura
-   1 hora pero se renueva con un solo click silencioso.
-═══════════════════════════════════════════════════ */
-let tokenClient = null;
+/* ══════════════════════════════════════════════
+   GOOGLE IDENTITY SERVICES
+══════════════════════════════════════════════ */
+let tokenClient=null;
 
-function initGIS() {
-  if (!S.clientId || !window.google?.accounts) return;
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: S.clientId,
-    scope: 'https://www.googleapis.com/auth/drive.file',
-    // NO pre-seleccionar cuenta — forzar que el usuario elija siempre
-    prompt: 'select_account',
-    callback: (resp) => {
-      if (resp.error) {
-        toast('❌ Error: ' + resp.error);
-        syncSt = 'err'; updateSyncUI();
-        return;
-      }
-      S.token   = resp.access_token;
-      S.tokenAt = Date.now();
-      saveS();
-      syncSt = 'ok';
-      updateSyncUI();
-      closeCfg();
-      toast('✅ Conectado con Google Drive');
-      startPoll();
-      doSync();
+function initGIS(){
+  if(!S.clientId||!window.google?.accounts) return;
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:S.clientId,
+    scope:'https://www.googleapis.com/auth/drive.file',
+    callback:(resp)=>{
+      if(resp.error){ toast('❌ Error: '+resp.error); syncSt='err'; updateSyncUI(); return; }
+      S.token=resp.access_token; S.tokenAt=Date.now();
+      saveS(); syncSt='ok'; updateSyncUI();
+      closeCfg(); toast('✅ Conectado con Google Drive');
+      startPoll(); doSync();
     }
   });
 }
 
-function requestToken(forceSelect = true) {
-  if (!tokenClient) initGIS();
-  if (!tokenClient) { toast('⚠️ Pon tu Client ID primero'); openCfg(); return; }
-  // forceSelect=true → siempre muestra el selector de cuenta
-  // forceSelect=false → renovación silenciosa en segundo plano
-  tokenClient.requestAccessToken({ prompt: forceSelect ? 'select_account' : '' });
+function requestToken(){
+  if(!tokenClient) initGIS();
+  if(!tokenClient){ toast('⚠️ Pon tu Client ID primero'); openCfg(); return; }
+  tokenClient.requestAccessToken({prompt:'select_account'});
 }
 
-function tokenExpired() {
-  if (!S.token || !S.tokenAt) return true;
-  return (Date.now() - S.tokenAt) > 55 * 60 * 1000;
-}
+function tokenExpired(){ return !S.token||!S.tokenAt||(Date.now()-S.tokenAt)>55*60*1000; }
 
-/* Auto-renovar token antes de cada operación Drive */
-async function ensureToken() {
-  if (!tokenExpired()) return true;
-  if (!S.clientId) return false;
-  return new Promise(resolve => {
-    if (!tokenClient) initGIS();
-    if (!tokenClient) { resolve(false); return; }
-    const orig = tokenClient.callback;
-    tokenClient.callback = (resp) => {
-      tokenClient.callback = orig;
-      if (resp.error) {
-        // Renovación silenciosa falló — pedir al usuario que reconecte
-        syncSt = 'err';
-        const lbl = document.getElementById('slbl');
-        if (lbl) lbl.textContent = '⚠️ Sesión expirada — toca ⚙️ para reconectar';
-        updateSyncUI();
-        resolve(false);
-        return;
+async function ensureToken(){
+  if(!tokenExpired()) return true;
+  if(!S.clientId) return false;
+  return new Promise(resolve=>{
+    if(!tokenClient) initGIS();
+    if(!tokenClient){ resolve(false); return; }
+    const orig=tokenClient.callback;
+    tokenClient.callback=(resp)=>{
+      tokenClient.callback=orig;
+      if(resp.error){
+        syncSt='err';
+        const l=document.getElementById('slbl');
+        if(l) l.textContent='⚠️ Sesión expirada — toca ⚙️';
+        updateSyncUI(); resolve(false); return;
       }
-      S.token   = resp.access_token;
-      S.tokenAt = Date.now();
-      saveS();
-      resolve(true);
+      S.token=resp.access_token; S.tokenAt=Date.now();
+      saveS(); resolve(true);
     };
-    // Renovación silenciosa — sin selector de cuenta
-    tokenClient.requestAccessToken({ prompt: '' });
+    tokenClient.requestAccessToken({prompt:''});
   });
 }
 
-/* ═══════════════════════════════════════════════════
-   DRIVE SYNC
-═══════════════════════════════════════════════════ */
-function schedWrite() {
-  if (!S.token || !S.fileId) return;
+/* ══════════════════════════════════════════════
+   DRIVE SYNC — FIX: leer con fields para obtener
+   la versión del archivo sin descargar el contenido
+══════════════════════════════════════════════ */
+function schedWrite(){
+  if(!S.token||!S.fileId) return;
   clearTimeout(writeTmr);
-  writeTmr = setTimeout(writeToD, 1500);
+  writeTmr=setTimeout(writeToD,1500);
 }
 
-async function writeToD() {
-  if (!S.fileId) return;
-  const ok = await ensureToken();
-  if (!ok) { syncSt='err'; updateSyncUI(); return; }
+async function writeToD(){
+  if(!S.fileId) return;
+  const ok=await ensureToken();
+  if(!ok){ syncSt='err'; updateSyncUI(); return; }
   syncSt='busy'; updateSyncUI();
-  const body = JSON.stringify({ checks:S.checks, overrides:S.overrides, extras:S.extras, version:Date.now() });
+  const body=JSON.stringify({
+    checks:S.checks, overrides:S.overrides,
+    extras:S.extras, customOrder:S.customOrder||{},
+    version:Date.now()
+  });
   try {
-    const r = await fetch(
+    const r=await fetch(
       `https://www.googleapis.com/upload/drive/v3/files/${S.fileId}?uploadType=media`,
-      { method:'PATCH', headers:{'Authorization':'Bearer '+S.token,'Content-Type':'application/json'}, body }
+      {method:'PATCH',headers:{'Authorization':'Bearer '+S.token,'Content-Type':'application/json'},body}
     );
-    if (r.ok) { S.lastVer=Date.now(); syncSt='ok'; saveS(); }
-    else       { syncSt='err'; }
-  } catch(e) { syncSt='err'; }
+    if(r.ok){ S.lastVer=Date.now(); syncSt='ok'; saveS(); }
+    else { syncSt='err'; console.error('Drive write error',r.status); }
+  } catch(e){ syncSt='err'; }
   updateSyncUI();
 }
 
-async function readFromD() {
-  if (!S.fileId) { syncSt='off'; updateSyncUI(); return; }
-  const ok = await ensureToken();
-  if (!ok) { syncSt='err'; updateSyncUI(); return; }
+async function readFromD(){
+  if(!S.fileId){ syncSt='off'; updateSyncUI(); return; }
+  const ok=await ensureToken();
+  if(!ok){ syncSt='err'; updateSyncUI(); return; }
   try {
-    const r = await fetch(
+    const r=await fetch(
       `https://www.googleapis.com/drive/v3/files/${S.fileId}?alt=media&t=${Date.now()}`,
-      { headers:{'Authorization':'Bearer '+S.token,'Cache-Control':'no-cache'} }
+      {headers:{'Authorization':'Bearer '+S.token,'Cache-Control':'no-cache, no-store'}}
     );
-    if (r.ok) {
-      const d = await r.json();
-      if ((d.version||0) > S.lastVer) {
-        if (d.checks)    S.checks    = d.checks;
-        if (d.overrides) S.overrides = d.overrides;
-        if (d.extras)    S.extras    = d.extras;
-        S.lastVer = d.version;
+    if(r.ok){
+      const d=await r.json();
+      const driveVer=d.version||0;
+      if(driveVer>S.lastVer){
+        if(d.checks)      S.checks      = d.checks;
+        if(d.overrides)   S.overrides   = d.overrides;
+        if(d.extras)      S.extras      = d.extras;
+        if(d.customOrder) S.customOrder = d.customOrder;
+        S.lastVer=driveVer;
         buildStores(); saveS(); render();
         toast('🔄 Lista actualizada desde el otro dispositivo');
       }
-      syncSt = 'ok';
-    } else { syncSt = 'err'; }
-  } catch(e) { syncSt='err'; }
+      syncSt='ok';
+    } else {
+      syncSt='err';
+      console.error('Drive read error',r.status);
+    }
+  } catch(e){ syncSt='err'; }
   updateSyncUI();
 }
 
-function doSync()    { readFromD(); }
-function startPoll() {
+function doSync(){ readFromD(); }
+function startPoll(){
   clearInterval(pollTmr);
-  if (!S.fileId || !S.clientId) return;
-  pollTmr = setInterval(readFromD, 10000);
+  if(!S.fileId||!S.clientId) return;
+  pollTmr=setInterval(readFromD,10000);
 }
 
-/* ── Sync UI ── */
-function updateSyncUI() {
-  const dot = document.getElementById('dot');
-  const lbl = document.getElementById('slbl');
-  if (!dot || !lbl) return;
-  dot.className = 'dot';
-  if (!S.fileId || !S.clientId) {
-    lbl.textContent = '⚙️ Toca para configurar Drive'; return;
-  }
-  if (syncSt==='ok') {
+function updateSyncUI(){
+  const dot=document.getElementById('dot');
+  const lbl=document.getElementById('slbl');
+  if(!dot||!lbl) return;
+  dot.className='dot';
+  if(!S.fileId||!S.clientId){ lbl.textContent='⚙️ Toca para configurar Drive'; return; }
+  if(syncSt==='ok'){
     dot.classList.add('ok');
-    const ago = S.lastVer ? Math.round((Date.now()-S.lastVer)/1000) : null;
-    lbl.textContent = ago ? `Sync hace ${ago<60?ago+'s':Math.round(ago/60)+'min'} · cada 10s` : 'Conectado a Drive';
-  } else if (syncSt==='busy') {
-    dot.classList.add('spin'); lbl.textContent = 'Sincronizando…';
-  } else if (syncSt==='err') {
-    dot.classList.add('err'); lbl.textContent = '⚠️ Error — toca para diagnosticar';
+    const ago=S.lastVer?Math.round((Date.now()-S.lastVer)/1000):null;
+    lbl.textContent=ago?`Sync hace ${ago<60?ago+'s':Math.round(ago/60)+'min'} · cada 10s`:'Conectado a Drive';
+  } else if(syncSt==='busy'){
+    dot.classList.add('spin'); lbl.textContent='Sincronizando…';
+  } else if(syncSt==='err'){
+    dot.classList.add('err'); lbl.textContent='⚠️ Error — toca para reconectar';
   } else {
-    lbl.textContent = '⚙️ Toca para configurar Drive';
+    lbl.textContent='⚙️ Toca para configurar Drive';
   }
 }
-setInterval(()=>{ if(syncSt==='ok') updateSyncUI(); }, 5000);
+setInterval(()=>{ if(syncSt==='ok') updateSyncUI(); },5000);
+function syncTap(){ if(!S.fileId||!S.clientId||syncSt==='err') openCfg(); else doSync(); }
 
-function syncTap() {
-  if (!S.fileId || !S.clientId || syncSt==='err') openCfg();
-  else doSync();
-}
+/* ══════════════════════════════════════════════
+   PANEL CONFIG
+══════════════════════════════════════════════ */
+function openCfg(){ renderCfg(); document.getElementById('cfg-overlay').style.display='flex'; document.getElementById('cfg-btn').classList.add('on'); }
+function closeCfg(){ document.getElementById('cfg-overlay').style.display='none'; document.getElementById('cfg-btn').classList.remove('on'); }
 
-/* ═══════════════════════════════════════════════════
-   PANEL DE CONFIGURACIÓN (sheet)
-═══════════════════════════════════════════════════ */
-function openCfg() {
-  renderCfg();
-  document.getElementById('cfg-overlay').style.display = 'flex';
-  document.getElementById('cfg-btn').classList.add('on');
-}
-function closeCfg() {
-  document.getElementById('cfg-overlay').style.display = 'none';
-  document.getElementById('cfg-btn').classList.remove('on');
-}
+function renderCfg(){
+  const hasCid=!!S.clientId, hasFid=!!S.fileId, hasTok=!!S.token&&!tokenExpired();
+  const connected=hasCid&&hasFid&&hasTok;
+  let st='';
+  if(connected) st=`<div class="status-row ok"><span style="font-size:16px">🟢</span><div><b>Conexión activa</b><span>Sync automático cada 10 seg · token vigente</span></div></div>`;
+  else if(!hasCid) st=`<div class="status-row fail"><span style="font-size:16px">❌</span><div><b>Falta el Client ID</b><span>Pega tu Client ID de Google Cloud Console.</span></div></div>`;
+  else if(!hasFid) st=`<div class="status-row fail"><span style="font-size:16px">❌</span><div><b>Falta el File ID</b><span>Sube super_estado.json a Drive y pega su ID.</span></div></div>`;
+  else if(!hasTok) st=`<div class="status-row warn"><span style="font-size:16px">🔑</span><div><b>Token expirado</b><span>Toca "Conectar con Google" para renovar.</span></div></div>`;
 
-function renderCfg() {
-  const hasClientId = !!S.clientId;
-  const hasFileId   = !!S.fileId;
-  const hasToken    = !!S.token && !tokenExpired();
-  const connected   = hasClientId && hasFileId && hasToken;
-
-  let statusHtml = '';
-  if (connected) {
-    statusHtml = `<div class="status-row ok"><span style="font-size:16px">🟢</span><div><b>Conexión activa</b><span>Token vigente · Sync automático cada 10 seg</span></div></div>`;
-  } else if (!hasClientId) {
-    statusHtml = `<div class="status-row fail"><span style="font-size:16px">❌</span><div><b>Falta el Client ID</b><span>Pega tu Client ID de Google Cloud Console.</span></div></div>`;
-  } else if (!hasFileId) {
-    statusHtml = `<div class="status-row fail"><span style="font-size:16px">❌</span><div><b>Falta el File ID</b><span>Sube super_estado.json a Drive y pega su ID.</span></div></div>`;
-  } else if (!hasToken) {
-    statusHtml = `<div class="status-row warn"><span style="font-size:16px">🔑</span><div><b>Token expirado o no obtenido</b><span>Toca "Iniciar sesión con Google".</span></div></div>`;
-  }
-
-  document.getElementById('cfg-sheet').innerHTML = `
+  document.getElementById('cfg-sheet').innerHTML=`
     <div class="sheet-title">⚙️ Configuración de Drive</div>
-    <div class="sheet-sub">Sincroniza la lista entre tus dispositivos en tiempo real.</div>
-
-    ${statusHtml}
-
+    <div class="sheet-sub">Sincroniza la lista entre tus dispositivos.</div>
+    ${st}
     <div class="cfg-section">1 · Client ID de Google Cloud</div>
     <div class="field">
       <div class="field-lbl">Client ID</div>
       <input id="inp-cid" placeholder="123456-xxxx.apps.googleusercontent.com" value="${S.clientId}">
-      <div class="field-hint">Google Cloud Console → APIs → Credenciales → OAuth 2.0 → Aplicación web</div>
+      <div class="field-hint">Google Cloud Console → Credenciales → OAuth 2.0 → Aplicación web</div>
     </div>
-
     <div class="cfg-section">2 · Archivo de estado en Drive</div>
     <div class="field">
       <div class="field-lbl">File ID del super_estado.json</div>
       <input id="inp-fid" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="${S.fileId}">
       <div class="field-hint">URL de Drive: …/file/d/<b>ESTE_ES_EL_ID</b>/view</div>
     </div>
-
     <div class="cfg-section">3 · Autorizar</div>
     <div style="font-size:12px;color:var(--text2);background:var(--ax);border-radius:var(--radx);padding:9px 11px;margin-bottom:10px;font-weight:500;line-height:1.5">
-      ⚠️ <b>Importante:</b> cuando aparezca el selector de cuentas de Google,
-      elige la cuenta <b>que tiene el archivo super_estado.json en Drive</b>
-      y que agregaste como usuario de prueba en Google Cloud Console.
+      ⚠️ Elige la cuenta que tiene el <b>super_estado.json</b> en Drive y que está en los <b>Usuarios de prueba</b> de Google Cloud.
     </div>
     <button class="btn-primary" onclick="saveCfgAndAuth()">
-      ${connected ? '↻ Reconectar con Google (elige la cuenta correcta)' : '🔑 Guardar y conectar con Google'}
+      ${connected?'↻ Reconectar con Google':'🔑 Guardar y conectar con Google'}
     </button>
     ${connected?`<button class="btn-secondary" onclick="saveOnlyAndClose()">Guardar sin reconectar</button>`:''}
     ${connected?`<button class="btn-secondary" style="color:var(--cm)" onclick="disconnect()">Desconectar cuenta</button>`:''}
     <button class="btn-secondary" onclick="closeCfg()">Cancelar</button>
-
-    <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6;font-weight:500">
-      💡 Si ves <b>"acceso bloqueado"</b>, ve a Google Cloud Console →
-      Pantalla de consentimiento OAuth → Usuarios de prueba →
-      agrega el correo de <b>cada celular</b> que vaya a usar la app.
-    </div>
-  `;
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;font-weight:500">
+      💡 Si ves "acceso bloqueado": Google Cloud → Pantalla de consentimiento → Usuarios de prueba → agrega tu correo.
+    </div>`;
 }
 
-function saveCfgAndAuth() {
-  const cid = document.getElementById('inp-cid').value.trim();
-  const fid = document.getElementById('inp-fid').value.trim();
-  if (!cid) { toast('⚠️ El Client ID es obligatorio'); return; }
-  if (!fid) { toast('⚠️ El File ID es obligatorio'); return; }
-  if (cid) { S.clientId = cid; tokenClient = null; } // reset GIS si cambió clientId
-  if (fid) S.fileId = fid;
-  // Limpiar token anterior para forzar nueva autenticación
-  S.token   = '';
-  S.tokenAt = 0;
-  saveS();
-  initGIS();
-  // Siempre mostrar selector de cuenta para evitar cuenta equivocada
-  requestToken(true);
+function saveCfgAndAuth(){
+  const cid=document.getElementById('inp-cid').value.trim();
+  const fid=document.getElementById('inp-fid').value.trim();
+  if(!cid){ toast('⚠️ El Client ID es obligatorio'); return; }
+  if(!fid){ toast('⚠️ El File ID es obligatorio'); return; }
+  S.clientId=cid; S.fileId=fid;
+  S.token=''; S.tokenAt=0;
+  tokenClient=null;
+  saveS(); initGIS(); requestToken();
 }
 
-function saveOnlyAndClose() {
-  const cid = document.getElementById('inp-cid').value.trim();
-  const fid = document.getElementById('inp-fid').value.trim();
-  if (cid) S.clientId = cid;
-  if (fid) S.fileId   = fid;
-  saveS(); closeCfg();
-  startPoll(); doSync();
+function saveOnlyAndClose(){
+  const cid=document.getElementById('inp-cid').value.trim();
+  const fid=document.getElementById('inp-fid').value.trim();
+  if(cid) S.clientId=cid;
+  if(fid) S.fileId=fid;
+  saveS(); closeCfg(); startPoll(); doSync();
 }
 
-function disconnect() {
-  if (!confirm('¿Desconectar la cuenta?')) return;
-  S.token = ''; S.tokenAt = 0;
+function disconnect(){
+  if(!confirm('¿Desconectar la cuenta?')) return;
+  S.token=''; S.tokenAt=0;
   clearInterval(pollTmr);
-  syncSt = 'off'; saveS(); closeCfg(); updateSyncUI();
+  syncSt='off'; saveS(); closeCfg(); updateSyncUI();
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    AGREGAR ARTÍCULO
-═══════════════════════════════════════════════════ */
-let addStoreIdx = -1;
+══════════════════════════════════════════════ */
+let addSI=-1;
 
-function openAdd() {
-  document.getElementById('add-sheet').innerHTML = `
+function openAdd(){
+  document.getElementById('add-sheet').innerHTML=`
     <div class="sheet-title">¿A qué tienda lo agregas?</div>
     <div class="sheet-sub">Selecciona el grupo donde irá el nuevo artículo.</div>
-    ${STORES.map((s,i) => `
+    ${STORES.map((s,i)=>`
       <div class="store-opt so${s.c}" onclick="selectAddStore(${i})">
         <span class="so-emoji">${s.emoji}</span>
-        <div class="so-info">
-          <div class="so-name">${s.name}</div>
-          <div class="so-count">${s.items.length} artículos</div>
-        </div>
+        <div class="so-info"><div class="so-name">${s.name}</div><div class="so-count">${s.items.length} artículos</div></div>
         <span style="color:var(--text3);font-size:16px">›</span>
       </div>`).join('')}
-    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>
-  `;
-  document.getElementById('add-overlay').style.display = 'flex';
+    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>`;
+  document.getElementById('add-overlay').style.display='flex';
 }
 
-function selectAddStore(i) {
-  addStoreIdx = i;
-  const s = STORES[i];
-  document.getElementById('add-sheet').innerHTML = `
+function selectAddStore(i){
+  addSI=i; const s=STORES[i];
+  document.getElementById('add-sheet').innerHTML=`
     <button class="back-btn" onclick="openAdd()">‹ Cambiar tienda</button>
     <div class="store-badge sb${s.c}">${s.emoji} ${s.name}</div>
     <div class="sheet-title">Nuevo artículo</div>
@@ -840,94 +924,78 @@ function selectAddStore(i) {
       </div>
     </div>
     <button class="btn-primary" onclick="confirmAdd()">＋ Agregar a ${s.name}</button>
-    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>
-  `;
-  setTimeout(()=>document.getElementById('add-name').focus(), 200);
+    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>`;
+  setTimeout(()=>document.getElementById('add-name')?.focus(),200);
 }
 
-function confirmAdd() {
-  const name  = document.getElementById('add-name').value.trim();
-  const qty   = Math.max(1, parseInt(document.getElementById('add-qty').value)||1);
-  const priceEl = document.getElementById('add-price');
-  const price = priceEl && !priceEl.disabled ? (parseInt(priceEl.value)||0) : null;
-  if (!name) {
-    document.getElementById('add-name').style.borderColor = 'var(--cm)';
+function confirmAdd(){
+  const name=document.getElementById('add-name').value.trim();
+  const qty=Math.max(1,parseInt(document.getElementById('add-qty').value)||1);
+  const pe=document.getElementById('add-price');
+  const price=pe&&!pe.disabled?(parseInt(pe.value)||0):null;
+  if(!name){
+    document.getElementById('add-name').style.borderColor='var(--cm)';
     setTimeout(()=>document.getElementById('add-name').style.borderColor='',1500);
     return;
   }
-  const si  = addStoreIdx;
-  const sid = STORES[si].id;
-  if (!S.extras[sid]) S.extras[sid] = [];
-  const item = { n:name, q:qty };
-  if (price !== null) item.p = price;
+  const sid=STORES[addSI].id;
+  if(!S.extras[sid]) S.extras[sid]=[];
+  const item={n:name,q:qty};
+  if(price!==null) item.p=price;
   S.extras[sid].push(item);
   buildStores(); saveS(); schedWrite();
-  closeAdd();
-  toast(`✓ "${name}" agregado`);
-  setTab(si);
+  closeAdd(); toast(`✓ "${name}" agregado`); setTab(addSI);
 }
+function closeAdd(){ document.getElementById('add-overlay').style.display='none'; }
 
-function closeAdd() { document.getElementById('add-overlay').style.display='none'; }
-
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    TOAST
-═══════════════════════════════════════════════════ */
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast'; el.textContent = msg;
+══════════════════════════════════════════════ */
+function toast(msg){
+  const el=document.createElement('div');
+  el.className='toast'; el.textContent=msg;
   document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>el.remove(), 2200);
+  setTimeout(()=>el.remove(),2200);
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    BOOT
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════ */
 loadS();
 render();
 updateSyncUI();
 
-// Tab por URL param (?tab=N)
-const tp = new URLSearchParams(location.search).get('tab');
-if (tp !== null) setTab(parseInt(tp,10));
+const tp=new URLSearchParams(location.search).get('tab');
+if(tp!==null) setTab(parseInt(tp,10));
 
-// Iniciar GIS si ya tenemos clientId
-if (S.clientId) {
-  // Esperar a que cargue la librería GIS
-  window.addEventListener('load', () => { initGIS(); });
+if(S.clientId){
+  window.addEventListener('load',()=>{ initGIS(); });
 }
-
-// Iniciar polling si hay configuración completa
-if (S.clientId && S.fileId && S.token) {
+if(S.clientId&&S.fileId&&S.token){
   startPoll();
-  setTimeout(doSync, 1000);
+  setTimeout(doSync,1000);
 } else {
-  syncSt = 'off'; updateSyncUI();
+  syncSt='off'; updateSyncUI();
 }
 
-// Sync al volver a la app
-document.addEventListener('visibilitychange', ()=>{
-  if (document.visibilityState==='visible' && S.fileId && S.token) doSync();
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&S.fileId&&S.token) doSync();
 });
-window.addEventListener('focus', ()=>{ if (S.fileId && S.token) doSync(); });
+window.addEventListener('focus',()=>{ if(S.fileId&&S.token) doSync(); });
 
-// Service Worker — con forzado de actualización
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(reg => {
-    // Forzar actualización si hay un SW esperando
-    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-    reg.addEventListener('updatefound', () => {
-      const newSW = reg.installing;
-      newSW.addEventListener('statechange', () => {
-        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-          // Hay una versión nueva — recargar automáticamente
-          newSW.postMessage({ type: 'SKIP_WAITING' });
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            window.location.reload();
-          });
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    reg.addEventListener('updatefound',()=>{
+      const sw=reg.installing;
+      sw.addEventListener('statechange',()=>{
+        if(sw.state==='installed'&&navigator.serviceWorker.controller){
+          sw.postMessage({type:'SKIP_WAITING'});
+          navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
         }
       });
     });
-  }).catch(() => {});
+  }).catch(()=>{});
 }
 </script>
 </body>

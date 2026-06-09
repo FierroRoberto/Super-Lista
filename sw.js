@@ -1,8 +1,8 @@
 /**
- * Service Worker — Lista del Súper v3
+ * Service Worker — Lista del Súper v3.1
  * Cache-First para assets locales · Sin caché para Drive API
  */
-const CACHE  = 'super-lista-v3';
+const CACHE  = 'super-lista-v3.1';
 const ASSETS = ['./index.html','./manifest.json','./icons/icon-192.png','./icons/icon-512.png'];
 
 self.addEventListener('install',  e => {
